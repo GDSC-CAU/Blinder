@@ -1,3 +1,4 @@
+import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/bottom_button.dart';
 import 'package:flutter/material.dart';
 
@@ -15,15 +16,17 @@ class RouteLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        ...children,
-        BottomButton(
-          text: routeText,
-          onPressed: onPressed,
-        ),
-      ],
+    return AppScaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          ...children,
+          BottomButton(
+            text: routeText,
+            onPressed: onPressed,
+          ),
+        ],
+      ),
     );
   }
 }
