@@ -1,6 +1,6 @@
-enum TransformStatus {
-  unTransformed,
-  transformed,
+enum SerializedStatus {
+  unSerialized,
+  serialized,
 }
 
 typedef JsonMap = Map<String, dynamic>;
@@ -30,36 +30,36 @@ abstract class Model<ModelType> {
 /// }
 /// ```
 /// ---
-/// ### 2. Define model instance typed data
+/// ### 2. Define model instance
 ///
 /// ```dart
-/// final dataList = ModelFactory(ExampleModel());
+/// final serialized = ModelFactory(ExampleModel());
 /// ```
 /// ---
-/// ### 3. Transform json list to model list
+/// ### 3. Serialize json list to model
 ///
-/// Get `json` list
+/// Serialize `json` **list** to your `Model` **list**
 ///   ```dart
 ///   final exampleJsonList = await fetch("...FetchURL");
+///   serialized.serializeList(exampleJsonList);
 ///   ```
-/// Transform `json` list to your `Model`
+/// Serialize `json` to your `Model`
 ///   ```dart
-///   dataList.transform(exampleJsonList);
+///   final exampleJson = await fetch("...FetchURL");
+///   serialized.serialize(exampleJson);
 ///   ```
 /// ---
 /// ### 4. Access data
 ///
-/// Access transformed model with `data(jsonMap)` or `dataList(list of jsonMap)` property
+/// Access serialized model with `data(jsonMap)` or `dataList(list of jsonMap)` property
 /// ```dart
-/// print(dataList.data[0].id);
+/// print(serialized.dataList[0].id);
 /// // 2
-/// print(data.id);
-/// // 3213
 /// ```
 class ModelFactory<ModelType extends Model<ModelType>> {
   static const String nullish = "NULLISH";
 
-  TransformStatus status = TransformStatus.unTransformed;
+  SerializedStatus status = SerializedStatus.unSerialized;
   final ModelType model;
   final List<ModelType> dataList = [];
   ModelType get data {
@@ -68,11 +68,11 @@ class ModelFactory<ModelType extends Model<ModelType>> {
 
   ModelFactory(this.model);
 
-  void _updateStatus() {
+  void _updateSerializedStatus() {
     if (dataList.isNotEmpty) {
-      status = TransformStatus.transformed;
+      status = SerializedStatus.serialized;
     } else {
-      status = TransformStatus.unTransformed;
+      status = SerializedStatus.unSerialized;
     }
   }
 
@@ -103,7 +103,7 @@ class ModelFactory<ModelType extends Model<ModelType>> {
   }
 
   /// transform `JsonMap` to `ModelType`
-  void transformJson(Map<String, dynamic>? jsonMap) {
+  void serialize(Map<String, dynamic>? jsonMap) {
     if (jsonMap != null) {
       print(_createModelInstance(jsonMap));
       _updateDataList(
@@ -111,11 +111,11 @@ class ModelFactory<ModelType extends Model<ModelType>> {
       );
     }
 
-    _updateStatus();
+    _updateSerializedStatus();
   }
 
   /// transform `List<JsonMap>` to `List<ModelType>`
-  void transformJsonList(List<dynamic>? jsonMapList) {
+  void serializeList(List<dynamic>? jsonMapList) {
     if (jsonMapList != null) {
       final List<ModelType> modelList = jsonMapList
           .map(
@@ -126,6 +126,6 @@ class ModelFactory<ModelType extends Model<ModelType>> {
       _updateDataList(modelList);
     }
 
-    _updateStatus();
+    _updateSerializedStatus();
   }
 }

@@ -9,7 +9,7 @@ class FoodMap implements Model<FoodMap> {
   @override
   void set(JsonMap jsonMap) {
     category = jsonMap["category"] as String;
-    _foodMenuFactory.transformJsonList(jsonMap["menu"] as List<JsonMap>);
+    _foodMenuFactory.serializeList(jsonMap["menu"] as List<JsonMap>);
     menu = _foodMenuFactory.dataList;
   }
 
