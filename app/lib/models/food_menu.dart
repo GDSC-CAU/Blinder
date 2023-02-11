@@ -11,6 +11,12 @@ class FoodMenu implements Model<FoodMenu> {
   }
 
   @override
+  JsonMap toJson() => {
+        "name": name,
+        "price": price,
+      };
+
+  @override
   FoodMenu create() => FoodMenu();
 
   @override

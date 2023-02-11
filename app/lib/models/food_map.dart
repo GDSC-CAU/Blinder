@@ -14,6 +14,12 @@ class FoodMap implements Model<FoodMap> {
   }
 
   @override
+  JsonMap toJson() => {
+        "category": category,
+        "menu": menu.map((menu) => menu.toJson()),
+      };
+
+  @override
   FoodMap create() => FoodMap();
 
   @override
