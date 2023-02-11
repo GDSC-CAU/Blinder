@@ -8,6 +8,7 @@ typedef JsonMap = Map<String, dynamic>;
 abstract class Model<ModelType> {
   void set(JsonMap jsonMap) {}
   ModelType create();
+  JsonMap toJson();
 }
 
 /// ### 1. Define model class
@@ -60,8 +61,22 @@ class ModelFactory<ModelType extends Model<ModelType>> {
   static const String nullish = "NULLISH";
 
   SerializedStatus status = SerializedStatus.unSerialized;
+
+  /// Instance of target `model`
   final ModelType model;
+
+  /// List of initial `JsonMap`
+  final List<JsonMap> jsonList = [];
+
+  /// Single `JsonMap`
+  JsonMap get json {
+    return jsonList[0];
+  }
+
+  /// List of `ModelType`
   final List<ModelType> dataList = [];
+
+  /// Single `ModelType`
   ModelType get data {
     return dataList[0];
   }
@@ -76,15 +91,18 @@ class ModelFactory<ModelType extends Model<ModelType>> {
     }
   }
 
-  void _updateDataList(List<ModelType> modelList) {
-    if (modelList.isEmpty == false) dataList.addAll(modelList);
+  void _updateJsonList(JsonMap jsonMap) {
+    if (jsonMap.isNotEmpty) jsonList.add(jsonMap);
   }
 
-  /// create `ModelType` instance from `Json`
-  ModelType _createModelInstance(dynamic json) {
+  void _updateDataList(ModelType model) {
+    if (model.runtimeType == ModelType) dataList.add(model);
+  }
+
+  JsonMap _createModelJson(dynamic json) {
     final modelKeys = (json as JsonMap).keys.toList();
 
-    final jsonMap = modelKeys.fold<JsonMap>(
+    final modelJsonMap = modelKeys.fold<JsonMap>(
       {},
       (accJsonMap, key) {
         if (json[key] != null) {
@@ -96,36 +114,51 @@ class ModelFactory<ModelType extends Model<ModelType>> {
       },
     );
 
+    return modelJsonMap;
+  }
+
+  /// create `ModelType` instance from `Json`
+  ModelType _createModelInstance(JsonMap jsonMap) {
     final ModelType modelInstance = model.create();
     modelInstance.set(jsonMap);
 
     return modelInstance;
   }
 
-  /// transform `JsonMap` to `ModelType`
-  void serialize(Map<String, dynamic>? jsonMap) {
+  /// serialize `JsonMap` to `ModelType`
+  void serialize(
+    Map<String, dynamic>? jsonMap, {
+    bool? enableSerializeStatusUpdate = true,
+  }) {
     if (jsonMap != null) {
-      print(_createModelInstance(jsonMap));
-      _updateDataList(
-        [_createModelInstance(jsonMap)],
-      );
+      final modelJsonMap = _createModelJson(jsonMap);
+      final modelInstance = _createModelInstance(modelJsonMap);
+
+      _updateJsonList(modelJsonMap);
+      _updateDataList(modelInstance);
     }
 
-    _updateSerializedStatus();
+    if (enableSerializeStatusUpdate == true) _updateSerializedStatus();
   }
 
-  /// transform `List<JsonMap>` to `List<ModelType>`
+  /// serialize `List<JsonMap>` to `List<ModelType>`
   void serializeList(List<dynamic>? jsonMapList) {
     if (jsonMapList != null) {
-      final List<ModelType> modelList = jsonMapList
-          .map(
-            (json) => _createModelInstance(json),
-          )
-          .toList();
-
-      _updateDataList(modelList);
+      for (final jsonMap in jsonMapList) {
+        serialize(
+          jsonMap as JsonMap,
+          enableSerializeStatusUpdate: false,
+        );
+      }
     }
 
     _updateSerializedStatus();
   }
+
+  /// Deserialize `Model` to `JsonMap`
+  static JsonMap deserialize(Model model) => model.toJson();
+
+  /// Deserialize `List<Model>` to `List<JsonMap>`
+  static List<JsonMap> deserializeList(List<Model> models) =>
+      models.map((model) => model.toJson()).toList();
 }
