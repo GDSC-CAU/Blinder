@@ -2,8 +2,8 @@ import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/bottom_button.dart';
 import 'package:flutter/material.dart';
 
-class RouteLayout extends StatelessWidget {
-  const RouteLayout({
+class ScreenLayout extends StatelessWidget {
+  const ScreenLayout({
     super.key,
     required this.children,
     required this.onPressed,

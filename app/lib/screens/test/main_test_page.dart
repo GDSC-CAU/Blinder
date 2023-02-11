@@ -1,4 +1,4 @@
-import 'package:app/common/widgets/route_layout.dart';
+import 'package:app/common/widgets/screen_layout.dart';
 import 'package:app/screens/test/scroll_test_page.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +9,7 @@ class MainTestPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RouteLayout(
+    return ScreenLayout(
       onPressed: () {
         Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const ScrollTestPage()));

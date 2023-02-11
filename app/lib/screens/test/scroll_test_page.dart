@@ -1,5 +1,5 @@
 import 'package:app/common/widgets/menu_button.dart';
-import 'package:app/common/widgets/route_layout.dart';
+import 'package:app/common/widgets/screen_layout.dart';
 import 'package:flutter/material.dart';
 
 class ScrollTestPage extends StatelessWidget {
@@ -9,7 +9,7 @@ class ScrollTestPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RouteLayout(
+    return ScreenLayout(
       onPressed: () {
         Navigator.of(context).pop();
       },
