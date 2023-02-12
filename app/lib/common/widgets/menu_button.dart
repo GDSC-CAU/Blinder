@@ -22,7 +22,7 @@ class MenuButton extends StatelessWidget {
       ),
       child: ElevatedButton(
         onPressed: () {
-          tts.speak(text);
+          ttsController.speak(text);
           onPressed();
         },
         style: ElevatedButton.styleFrom(
