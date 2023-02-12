@@ -1,4 +1,5 @@
 import 'package:app/common/styles/colors.dart';
+import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 
 class MenuButton extends StatelessWidget {
@@ -20,7 +21,10 @@ class MenuButton extends StatelessWidget {
         vertical: 5,
       ),
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: () {
+          tts.speak(text);
+          onPressed();
+        },
         style: ElevatedButton.styleFrom(
           alignment: Alignment.center,
           elevation: 2,
