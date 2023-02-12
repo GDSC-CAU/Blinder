@@ -1,7 +1,28 @@
 import 'package:flutter/material.dart';
 
-class CartProvider extends ChangeNotifier {
-  late final data;
+import '../models/item.dart';
 
-  CartProvider();
+class CartProvider with ChangeNotifier {
+  final List<Item> items = [
+    Item(count: 2, name: "PASTA", price: 12000),
+    Item(count: 3, name: "Burger", price: 14000),
+  ];
+
+  void addItem(Item newItem) {
+    items.add(newItem);
+  }
+
+  List<DataRow> getItemList() {
+    return items
+        .map(
+          (item) => DataRow(
+            cells: [
+              DataCell(Text(item.name)),
+              DataCell(Text(item.count.toString())),
+              DataCell(Text(item.price.toString())),
+            ],
+          ),
+        )
+        .toList();
+  }
 }
