@@ -1,7 +1,13 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
-class Tts {
-  static late final FlutterTts flutterTts;
+final FlutterTts tts = FlutterTts();
 
-  Tts();
+Future<void> initTts() async {
+  await tts.awaitSpeakCompletion(true);
+  await tts.setSpeechRate(0.8);
+  await tts.setLanguage('ko');
+}
+
+Future speak(String word) async {
+  await tts.speak(word);
 }
