@@ -10,6 +10,11 @@ class CartProvider with ChangeNotifier {
 
   void addItem(Item newItem) {
     items.add(newItem);
+    notifyListeners();
+  }
+
+  void printItems() {
+    items.map((item) => item.toString()).forEach(print);
   }
 
   List<DataRow> getItemList() {
