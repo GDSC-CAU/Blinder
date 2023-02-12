@@ -6,17 +6,14 @@ import 'package:flutter/material.dart';
 class FoodMapProvider extends ChangeNotifier {
   final foodMap = ModelFactory(FoodMap());
 
-  FoodMapProvider();
-
   List<String> getFoodCategory() =>
       foodMap.dataList.map((food) => food.category).toList();
 
   List<FoodMenu> getFoodMenuByCategory(String category) =>
       foodMap.dataList.firstWhere((food) => food.category == category).menu;
 
-  void initializeFoodMapFromJson(List<JsonMap> jsonList) {
+  void updateFoodMapFromJson(List<JsonMap> jsonList) {
     foodMap.serializeList(jsonList);
-    notifyListeners();
   }
 
   List<JsonMap> getDeserializedFoodMap() =>
