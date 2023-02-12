@@ -69,16 +69,16 @@ class ModelFactory<ModelType extends Model<ModelType>> {
   final List<JsonMap> jsonList = [];
 
   /// Single `JsonMap`
-  JsonMap get json {
-    return jsonList[0];
+  JsonMap? get json {
+    return jsonList.isEmpty ? null : jsonList.first;
   }
 
   /// List of `ModelType`
   final List<ModelType> dataList = [];
 
   /// Single `ModelType`
-  ModelType get data {
-    return dataList[0];
+  ModelType? get data {
+    return dataList.isEmpty ? null : dataList.first;
   }
 
   ModelFactory(this.model);
@@ -92,11 +92,15 @@ class ModelFactory<ModelType extends Model<ModelType>> {
   }
 
   void _updateJsonList(JsonMap jsonMap) {
-    if (jsonMap.isNotEmpty) jsonList.add(jsonMap);
+    if (jsonMap.isNotEmpty) {
+      jsonList.add(jsonMap);
+    }
   }
 
   void _updateDataList(ModelType model) {
-    if (model.runtimeType == ModelType) dataList.add(model);
+    if (model.runtimeType == ModelType) {
+      dataList.add(model);
+    }
   }
 
   JsonMap _createModelJson(dynamic json) {
@@ -125,11 +129,18 @@ class ModelFactory<ModelType extends Model<ModelType>> {
     return modelInstance;
   }
 
+  void _clearData() {
+    jsonList.clear();
+    dataList.clear();
+  }
+
   /// serialize `JsonMap` to `ModelType`
   void serialize(
     Map<String, dynamic>? jsonMap, {
     bool? enableSerializeStatusUpdate = true,
   }) {
+    if (enableSerializeStatusUpdate == true) _clearData();
+
     if (jsonMap != null) {
       final modelJsonMap = _createModelJson(jsonMap);
       final modelInstance = _createModelInstance(modelJsonMap);
@@ -144,6 +155,8 @@ class ModelFactory<ModelType extends Model<ModelType>> {
   /// serialize `List<JsonMap>` to `List<ModelType>`
   void serializeList(List<dynamic>? jsonMapList) {
     if (jsonMapList != null) {
+      _clearData();
+
       for (final jsonMap in jsonMapList) {
         serialize(
           jsonMap as JsonMap,
