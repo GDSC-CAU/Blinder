@@ -1,6 +1,6 @@
-import 'package:app/screens/food_camera_screen.dart';
 import 'package:app/screens/food_category_screen.dart';
 import 'package:app/screens/food_counting_screen.dart';
+import 'package:app/screens/food_menu_scan_screen.dart';
 import 'package:app/screens/food_menu_screen.dart';
 import 'package:app/screens/food_receipt_screen.dart';
 import 'package:app/screens/main_voice_screen.dart';
@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 
 enum RouterPath {
   mainVoice,
-  foodCamera,
+  foodMenuScan,
   foodCategory,
   foodMenu,
   foodCounting,
@@ -19,7 +19,7 @@ class AppRouter {
   const AppRouter();
 
   static const String mainVoicePath = "/";
-  static const String foodCameraPath = "/camera";
+  static const String foodMenuScanPath = "/scan";
   static const String foodCategoryPath = "/food-category";
   static const String foodCountingPath = "/food-counting";
   static const String foodMenuPath = "/food-menu";
@@ -27,7 +27,7 @@ class AppRouter {
 
   static const Map<RouterPath, String> routePath = {
     RouterPath.mainVoice: mainVoicePath,
-    RouterPath.foodCamera: foodCameraPath,
+    RouterPath.foodMenuScan: foodMenuScanPath,
     RouterPath.foodCategory: foodCategoryPath,
     RouterPath.foodCounting: foodCountingPath,
     RouterPath.foodMenu: foodMenuPath,
@@ -38,8 +38,8 @@ class AppRouter {
   static const Widget initialScreen = MainVoiceScreen();
 
   static final Map<String, Widget Function(BuildContext)> routes = {
-    routePath[RouterPath.foodCamera] ?? foodCameraPath: (context) =>
-        const FoodCameraScreen(),
+    routePath[RouterPath.foodMenuScan] ?? foodMenuScanPath: (context) =>
+        const FoodMenuScanScreen(),
     routePath[RouterPath.foodCategory] ?? foodCategoryPath: (context) =>
         const FoodCategoryScreen(),
     routePath[RouterPath.foodMenu] ?? foodMenuPath: (context) =>
