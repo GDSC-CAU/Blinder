@@ -94,9 +94,6 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
                         price: menu.price,
                         count: itemCnt,
                       ));
-                  //
-                  //context.read<FoodCartProvider>().printItems();
-                  //
                   AppRouter.move(
                     context,
                     to: RouterPath.foodOrder,

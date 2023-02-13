@@ -6,10 +6,15 @@ class FoodCartProvider with ChangeNotifier {
 
   void addItem(FoodCartItem newFoodCartItem) {
     foodCartItems.add(newFoodCartItem);
+    _printItems();
     notifyListeners();
   }
 
-  void printItems() => foodCartItems.map((e) => e.toString()).forEach(print);
+  void _printItems() {
+    print('Print Cart Items');
+    foodCartItems.map((e) => e.toString()).forEach(print);
+    print('');
+  }
 
   List<DataRow> getFoodCartItemList() => foodCartItems
       .map(
