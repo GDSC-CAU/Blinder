@@ -1,9 +1,12 @@
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/bottom_button.dart';
 import 'package:app/common/widgets/screen_title.dart';
+import 'package:app/models/food_cart_item.dart';
 import 'package:app/models/food_menu.dart';
+import 'package:app/providers/cart_provider.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../common/widgets/menu_button.dart';
 import '../router/app_router.dart';
@@ -86,6 +89,14 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
                 if (itemCnt == 0) {
                   ttsController.speak('메뉴를 1개 이상 선택해주세요.');
                 } else {
+                  context.read<FoodCartProvider>().addItem(FoodCartItem(
+                        name: menu.name,
+                        price: menu.price,
+                        count: itemCnt,
+                      ));
+                  //
+                  //context.read<FoodCartProvider>().printItems();
+                  //
                   AppRouter.move(
                     context,
                     to: RouterPath.foodOrder,

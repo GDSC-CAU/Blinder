@@ -9,6 +9,8 @@ class FoodCartProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void printItems() => foodCartItems.map((e) => e.toString()).forEach(print);
+
   List<DataRow> getFoodCartItemList() => foodCartItems
       .map(
         (item) => DataRow(
