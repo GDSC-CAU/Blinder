@@ -15,6 +15,11 @@ void testMockupDataSetup(BuildContext context) {
           {"name": "까르보라나 파스타", "price": "15000"},
           {"name": "봉골레 파스타", "price": "14000"},
           {"name": "상하이 해물 파스타", "price": "14000"},
+          {"name": "스테이크 칠리 파스타", "price": "17000"},
+          {"name": "미트볼 파에냐 파스타", "price": "15000"},
+          {"name": "라르로리오 파스타", "price": "15000"},
+          {"name": "쉬림프 댄싱 파스타", "price": "14000"},
+          {"name": "치즈 미팅 파스타", "price": "14000"},
         ]
       },
       {
@@ -99,6 +104,7 @@ class MainVoiceScreen extends StatelessWidget {
                 Icon(
                   Icons.settings_voice,
                   size: 100,
+                  semanticLabel: "음성 인식 버튼",
                 ),
                 SizedBox(
                   height: 30,
