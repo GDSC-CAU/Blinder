@@ -8,12 +8,14 @@ class MenuButton extends StatelessWidget {
   final String text;
   final String? ttsText;
   final void Function() onPressed;
+  final Widget? child;
 
   const MenuButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.ttsText,
+    this.child,
   });
 
   @override
@@ -41,13 +43,14 @@ class MenuButton extends StatelessWidget {
           fixedSize: Size(width, menuButtonHeight),
           enableFeedback: true,
         ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        child: child ??
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
       ),
     );
   }
