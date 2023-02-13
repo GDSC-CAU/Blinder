@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/bottom_button.dart';
+import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -49,8 +49,24 @@ class _FoodMenuScanScreenState extends State<FoodMenuScanScreen> {
     return Scaffold(
       body: Center(
         child: _isCaptured
-            ? CapturedImage(
-                imageFile: _capturedImage!,
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: CapturedImage(
+                      imageFile: _capturedImage!,
+                    ),
+                  ),
+                  BottomButton(
+                    text: "음식 주문하기",
+                    onPressed: () {
+                      AppRouter.move(
+                        context,
+                        to: RouterPath.foodCategory,
+                      );
+                    },
+                  )
+                ],
               )
             : Stack(
                 alignment: Alignment.bottomCenter,
@@ -91,13 +107,8 @@ class FloatingActionCameraButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomButton(
-      text: "메뉴판 촬영",
+      text: "매뉴판 촬영 하기",
       onPressed: onPressed,
-      child: const Icon(
-        Icons.camera_alt,
-        size: 35,
-        color: Palette.$brown100,
-      ),
     );
   }
 }
@@ -113,11 +124,9 @@ class CapturedImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Expanded(
-          child: Image.file(imageFile),
-        ),
+      child: Image.file(
+        imageFile,
+        height: 400,
       ),
     );
   }
