@@ -6,10 +6,12 @@ class BottomButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
+    this.child,
   });
 
   final void Function() onPressed;
   final String text;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +31,14 @@ class BottomButton extends StatelessWidget {
         enableFeedback: true,
       ),
       onPressed: onPressed,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 25,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: child ??
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
     );
   }
 }
