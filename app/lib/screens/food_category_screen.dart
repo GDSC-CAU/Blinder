@@ -12,7 +12,7 @@ class FoodCategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ttsController.speak("원하는 음식의 카테고리를 선택하세요");
+    ttsController.speak("원하는 음식의 카테고리를 선택해주세요");
 
     final foodCategoryList = context.read<FoodMapProvider>().getFoodCategory();
     final listHeight =
