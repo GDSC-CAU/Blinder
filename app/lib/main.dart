@@ -11,7 +11,7 @@ class Blinder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Providers(
+    return Providers(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: "Blinder",
