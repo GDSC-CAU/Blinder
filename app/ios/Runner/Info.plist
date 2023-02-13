@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Detect menu board lively</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Detect menu board lively</string>
 </dict>
 </plist>
