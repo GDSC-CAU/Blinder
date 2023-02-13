@@ -34,7 +34,6 @@ class AppRouter {
     RouterPath.foodReceipt: foodReceiptPath,
   };
 
-  static String initialRoute = RouterPath.mainVoice.name;
   static const Widget initialScreen = MainVoiceScreen();
 
   static final Map<String, Widget Function(BuildContext)> routes = {
