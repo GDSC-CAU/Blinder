@@ -61,6 +61,20 @@ class AppRouter {
     );
   }
 
+  static void moveAndClear<RoutingArguments extends Object>(
+    BuildContext context, {
+    required RouterPath to,
+    required bool Function(Route<dynamic>) clearRouterStackUntil,
+    RoutingArguments? arguments,
+  }) {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      routePath[to]!,
+      (route) => clearRouterStackUntil(route),
+      arguments: arguments,
+    );
+  }
+
   static void back(BuildContext context) {
     Navigator.pop(context);
   }
