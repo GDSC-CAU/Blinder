@@ -27,7 +27,7 @@ class FoodCategoryScreen extends StatelessWidget {
             ]),
           ),
           Flexible(
-            flex: 7,
+            flex: 9,
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Expanded(
