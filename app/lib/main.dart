@@ -1,3 +1,4 @@
+import 'package:app/providers/providers.dart';
 import 'package:app/screens/test/main_test_page.dart';
 import 'package:flutter/material.dart';
 
@@ -10,9 +11,11 @@ class Blinder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MainTestPage(),
+    return Providers(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MainTestPage(),
+      ),
     );
   }
 }
