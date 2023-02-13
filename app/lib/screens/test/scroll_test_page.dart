@@ -1,14 +1,31 @@
 import 'package:app/common/widgets/menu_button.dart';
 import 'package:app/common/widgets/screen_layout.dart';
+import 'package:app/providers/food_map_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class ScrollTestPage extends StatelessWidget {
   const ScrollTestPage({
     super.key,
   });
 
+  String formatMoney(
+    num amount, {
+    String locale = "ko_KR",
+  }) {
+    final formatter = NumberFormat.simpleCurrency(
+      locale: locale,
+    );
+    return formatter.format(amount);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<FoodMapProvider>(context);
+    final categories = controller.getFoodCategory();
+    final menus = controller.getFoodMenuByCategory(categories[0]);
+
     return ScreenLayout(
       onPressed: () {
         Navigator.of(context).pop();
@@ -29,36 +46,15 @@ class ScrollTestPage extends StatelessWidget {
           height: 500,
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  MenuButton(
-                    text: '비빔밥 9,000',
-                    onPressed: () {},
-                  ),
-                  MenuButton(
-                    text: 'Menu',
-                    onPressed: () {},
-                  ),
-                  MenuButton(
-                    text: 'Menu',
-                    onPressed: () {},
-                  ),
-                  MenuButton(
-                    text: 'Menu',
-                    onPressed: () {},
-                  ),
-                  MenuButton(
-                    text: 'Menu',
-                    onPressed: () {},
-                  ),
-                  MenuButton(
-                    text: 'Menu',
-                    onPressed: () {},
-                  ),
-                ],
-              ),
+            child: ListView.builder(
+              itemBuilder: (context, index) {
+                final menu = menus[index];
+                return MenuButton(
+                  text: "${menu.name} ${formatMoney(menu.price)}",
+                  onPressed: () {},
+                );
+              },
+              itemCount: menus.length,
             ),
           ),
         ),
