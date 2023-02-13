@@ -34,7 +34,6 @@ class AppRouter {
     RouterPath.foodReceipt: foodReceiptPath,
   };
 
-  static String initialRoute = RouterPath.mainVoice.name;
   static const Widget initialScreen = MainVoiceScreen();
 
   static final Map<String, Widget Function(BuildContext)> routes = {
@@ -58,6 +57,20 @@ class AppRouter {
     Navigator.pushNamed(
       context,
       routePath[to]!,
+      arguments: arguments,
+    );
+  }
+
+  static void moveAndClear<RoutingArguments extends Object>(
+    BuildContext context, {
+    required RouterPath to,
+    required bool Function(Route<dynamic>) clearRouterStackUntil,
+    RoutingArguments? arguments,
+  }) {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      routePath[to]!,
+      (route) => clearRouterStackUntil(route),
       arguments: arguments,
     );
   }

@@ -3,14 +3,20 @@ import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 
 class MenuButton extends StatelessWidget {
+  static double menuButtonHeight = 60;
+
+  final String text;
+  final String? ttsText;
+  final void Function() onPressed;
+  final Widget? child;
+
   const MenuButton({
     super.key,
     required this.text,
     required this.onPressed,
+    this.ttsText,
+    this.child,
   });
-
-  final String text;
-  final void Function() onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +28,7 @@ class MenuButton extends StatelessWidget {
       ),
       child: ElevatedButton(
         onPressed: () {
-          ttsController.speak(text);
+          if (ttsText != null) ttsController.speak(ttsText!);
           onPressed();
         },
         style: ElevatedButton.styleFrom(
@@ -34,16 +40,17 @@ class MenuButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
           ),
-          fixedSize: Size(width, 150),
+          fixedSize: Size(width, menuButtonHeight),
           enableFeedback: true,
         ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        child: child ??
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
       ),
     );
   }
