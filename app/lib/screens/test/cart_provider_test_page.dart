@@ -37,7 +37,7 @@ class CartTestPage extends StatelessWidget {
                 ),
               ),
             ],
-            rows: context.watch<CartProvider>().getItemList(),
+            rows: context.watch<FoodCartProvider>().getFoodCartItemList(),
           ),
           ElevatedButton(
             onPressed: () {

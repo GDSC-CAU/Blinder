@@ -1,4 +1,5 @@
 import 'package:app/common/widgets/screen_layout.dart';
+import 'package:app/screens/test/add_item_page.dart';
 import 'package:app/screens/test/scroll_test_page.dart';
 import 'package:flutter/material.dart';
 
@@ -21,20 +22,40 @@ class MainTestPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const MenuButtonTestPage()));
-                  },
-                  child: const Text('Custom Button')),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MenuButtonTestPage(),
+                    ),
+                  );
+                },
+                child: const Text('Custom Button'),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const ScrollTestPage()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ScrollTestPage(),
+                    ),
+                  );
                 },
                 child: const Text('Scroll Button'),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AddItemPage(),
+                    ),
+                  );
+                },
+                child: const Text('Add Item'),
               ),
             ),
           ],

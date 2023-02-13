@@ -1,9 +1,8 @@
 import 'package:app/common/widgets/app_scaffold.dart';
+import 'package:app/models/food_cart_item.dart';
 import 'package:app/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../models/item.dart';
 
 class AddItemPage extends StatelessWidget {
   const AddItemPage({super.key});
@@ -13,12 +12,13 @@ class AddItemPage extends StatelessWidget {
     return AppScaffold(
       body: ElevatedButton(
         onPressed: () {
-          context.read<CartProvider>().addItem(Item(
-                name: "FRIES",
-                price: 5000,
-                count: 2,
-              ));
-          context.read<CartProvider>().printItems();
+          context.read<FoodCartProvider>().addItem(
+                FoodCartItem(
+                  name: "FRIES",
+                  price: 5000,
+                  count: 2,
+                ),
+              );
         },
         child: const Text('Add Item'),
       ),
