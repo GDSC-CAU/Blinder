@@ -11,7 +11,7 @@ class Blinder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Providers(
+    return const Providers(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: MainTestPage(),
