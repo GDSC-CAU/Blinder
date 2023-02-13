@@ -15,26 +15,13 @@ class AppScaffold extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Palette.$brown900,
         centerTitle: true,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              "Blinder",
-              style: TextStyle(
-                color: Palette.$white,
-                fontWeight: FontWeight.w700,
-                fontFamily: "",
-              ),
-            ),
-            SizedBox(
-              width: 7,
-            ),
-            Icon(
-              Icons.remove_red_eye,
-              color: Palette.$white,
-              size: 20,
-            ),
-          ],
+        title: const Text(
+          "Blinder",
+          style: TextStyle(
+            color: Palette.$brown100,
+            fontWeight: FontWeight.w700,
+            fontFamily: "Jura",
+          ),
         ),
       ),
       body: Center(child: body),

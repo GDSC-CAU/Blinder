@@ -1,5 +1,5 @@
 import 'package:app/providers/providers.dart';
-import 'package:app/screens/test/main_test_page.dart';
+import 'package:app/router/app_router.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,7 +14,10 @@ class Blinder extends StatelessWidget {
     return Providers(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: MainTestPage(),
+        title: "Blinder",
+        routes: AppRouter.routes,
+        home: AppRouter.initialScreen,
+        initialRoute: AppRouter.initialRoute,
       ),
     );
   }
