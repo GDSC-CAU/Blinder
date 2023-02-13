@@ -10,6 +10,10 @@ class FoodCartProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void clearItems() {
+    foodCartItems.clear();
+  }
+
   void _printItems() {
     print('Print Cart Items');
     foodCartItems.map((e) => e.toString()).forEach(print);
