@@ -1,4 +1,5 @@
 import 'package:app/common/styles/colors.dart';
+import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 
 class BottomButton extends StatelessWidget {
@@ -30,7 +31,10 @@ class BottomButton extends StatelessWidget {
         elevation: 2,
         enableFeedback: true,
       ),
-      onPressed: onPressed,
+      onPressed: () {
+        ttsController.speak(text);
+        onPressed();
+      },
       child: child ??
           Text(
             text,
