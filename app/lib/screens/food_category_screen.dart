@@ -21,28 +21,37 @@ class FoodCategoryScreen extends StatelessWidget {
     return AppScaffold(
       body: Column(
         children: [
-          const ScreenTitle(title: "음식 카테고리 선택"),
-          SizedBox(
-            height: listHeight,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  final foodCategory = foodCategoryList[index];
-                  return MenuButton(
-                    text: foodCategory,
-                    onPressed: () {
-                      AppRouter.move(
-                        context,
-                        to: RouterPath.foodMenu,
-                        arguments: foodCategory,
+          Flexible(
+            child: Column(children: const [
+              ScreenTitle(title: "음식 카테고리 선택"),
+            ]),
+          ),
+          Flexible(
+            flex: 5,
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: ListView.builder(
+                    itemBuilder: (context, index) {
+                      final foodCategory = foodCategoryList[index];
+                      return MenuButton(
+                        text: foodCategory,
+                        onPressed: () {
+                          AppRouter.move(
+                            context,
+                            to: RouterPath.foodMenu,
+                            arguments: foodCategory,
+                          );
+                        },
                       );
                     },
-                  );
-                },
-                itemCount: foodCategoryList.length,
+                    itemCount: foodCategoryList.length,
+                  ),
+                ),
               ),
-            ),
+            ]),
           ),
         ],
       ),
