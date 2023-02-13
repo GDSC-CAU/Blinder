@@ -91,7 +91,7 @@ class FloatingActionCameraButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomButton(
-      text: "",
+      text: "메뉴판 촬영",
       onPressed: onPressed,
       child: const Icon(
         Icons.camera_alt,
