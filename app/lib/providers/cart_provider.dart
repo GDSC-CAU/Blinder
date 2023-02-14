@@ -14,9 +14,8 @@ class FoodCartProvider with ChangeNotifier {
     foodCartItems.clear();
   }
 
-  num getTotalPrice() => foodCartItems
-      .map((item) => item.price * item.count)
-      .reduce((prev, cur) => prev + cur);
+  num getTotalPrice() =>
+      foodCartItems.map((item) => item.price).reduce((prev, cur) => prev + cur);
 
   void _printFoodCartItems() {
     print('Print Cart Items');
