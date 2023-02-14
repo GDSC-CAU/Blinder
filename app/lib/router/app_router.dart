@@ -2,11 +2,10 @@ import 'package:app/screens/food_category_screen.dart';
 import 'package:app/screens/food_counting_screen.dart';
 import 'package:app/screens/food_menu_scan_screen.dart';
 import 'package:app/screens/food_menu_screen.dart';
+import 'package:app/screens/food_order_screen.dart';
 import 'package:app/screens/food_receipt_screen.dart';
 import 'package:app/screens/main_voice_screen.dart';
 import 'package:flutter/material.dart';
-
-import '../screens/food_order.dart';
 
 enum RouterPath {
   mainVoice,
