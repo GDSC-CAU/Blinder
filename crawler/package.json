@@ -1,0 +1,38 @@
+{
+    "name": "blinder-crawler",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "main": "index.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "compile": "tsc",
+        "start": "pnpm compile && node dist/index",
+        "lint": "eslint '**/*.ts'",
+        "prettier": "prettier '**/*.{ts,json,md}' --check",
+        "prettier:fix": "prettier **/*.{ts,json,md}' --write"
+    },
+    "keywords": [],
+    "author": "Blinder",
+    "license": "MIT",
+    "dependencies": {
+        "typescript": "^4.9.5"
+    },
+    "devDependencies": {
+        "@types/node": "^18.13.0",
+        "@typescript-eslint/eslint-plugin": "^5.52.0",
+        "@typescript-eslint/parser": "^5.52.0",
+        "chalk": "^5.2.0",
+        "eslint": "^8.34.0",
+        "eslint-config-prettier": "^8.6.0",
+        "eslint-import-resolver-typescript": "^3.5.3",
+        "eslint-plugin-import": "^2.27.5",
+        "eslint-plugin-prettier": "^4.2.1",
+        "prettier": "^2.8.4"
+    }
+}
