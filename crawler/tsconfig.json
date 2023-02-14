@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "module": "ES2020",
+        "moduleResolution": "node16",
+        "noEmit": false,
+        "target": "ES2022",
+        "sourceMap": true,
+        "outDir": "dist",
+        "forceConsistentCasingInFileNames": true
+    }
+}
