@@ -1,5 +1,4 @@
 import 'package:app/providers/providers.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/screens/test/ocr/main_ocr_test_page.dart';
 import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
