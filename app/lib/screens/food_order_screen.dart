@@ -12,34 +12,39 @@ class FoodOrderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ttsController.speak('메뉴를 선택하셨습니다. 추가 선택을 할 지 주문을 완료할지 결정해주세요.');
+    ttsController.speak('메뉴를 선택하셨습니다. 음식을 추가할 지, 주문을 완료할지 선택하세요.');
+
     return AppScaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const ScreenTitle(title: '주문 할까요?'),
+          const ScreenTitle(title: '주문을 진행할까요?'),
           const SizedBox(height: 50),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
                 MenuButton(
-                    text: '음식 주문',
-                    onPressed: () {
-                      AppRouter.move(context, to: RouterPath.foodReceipt);
-                    }),
+                  text: '음식 주문',
+                  onPressed: () {
+                    AppRouter.move(
+                      context,
+                      to: RouterPath.foodReceipt,
+                    );
+                  },
+                ),
                 const SizedBox(height: 50),
                 MenuButton(
-                    text: '음식 추가',
-                    onPressed: () {
-                      AppRouter.moveAndClear(context,
-                          to: RouterPath.foodCategory,
-                          clearRouterStackUntil: (route) {
-                        print(route.settings.name);
-                        return route.settings.name ==
-                            AppRouter.foodMenuScanPath;
-                      });
-                    }),
+                  text: '음식 추가',
+                  onPressed: () {
+                    AppRouter.moveAndClear(
+                      context,
+                      to: RouterPath.foodCategory,
+                      clearRouterStackUntil: (route) =>
+                          route.settings.name == AppRouter.foodMenuScanPath,
+                    );
+                  },
+                ),
               ],
             ),
           ),
