@@ -14,8 +14,9 @@ class FoodReceiptScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final totalPrice = context.read<FoodCartProvider>().getTotalPrice();
-    ttsController.speak(
-        '주문서가 완성됐습니다. 종업원에게 주문서를 보여주고 주문을 끝내세요. 총 가격은 $totalPrice 원 입니다.');
+    ttsController
+        .speak('주문서가 완성됐습니다. 종업원에게 주문서를 보여주세요. 총 가격은 $totalPrice 원 입니다.');
+
     return AppScaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -83,7 +84,7 @@ class FoodReceiptScreen extends StatelessWidget {
               child: BottomButton(
                 text: '돌아가기',
                 onPressed: () {
-                  context.read<FoodCartProvider>().clearItems();
+                  context.read<FoodCartProvider>().clearFoodCartItems();
                   AppRouter.moveAndClear(context,
                       to: RouterPath.mainVoice,
                       clearRouterStackUntil: (route) => false);

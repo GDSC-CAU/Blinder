@@ -10,7 +10,7 @@ class MenuButtonTestPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<FoodMapProvider>(context);
+    final controller = context.read<FoodMapProvider>();
     controller.updateFoodMapFromJson(
       [
         {

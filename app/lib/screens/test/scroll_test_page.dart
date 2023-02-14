@@ -22,7 +22,7 @@ class ScrollTestPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<FoodMapProvider>(context);
+    final controller = context.read<FoodMapProvider>();
     final categories = controller.getFoodCategory();
     final menus = controller.getFoodMenuByCategory(categories[0]);
 

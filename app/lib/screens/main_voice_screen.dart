@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void testMockupDataSetup(BuildContext context) {
-  Provider.of<FoodMapProvider>(context).updateFoodMapFromJson(
+  context.read<FoodMapProvider>().updateFoodMapFromJson(
     [
       {
         "category": "파스타",

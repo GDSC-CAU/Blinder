@@ -12,7 +12,7 @@ class AddItemPage extends StatelessWidget {
     return AppScaffold(
       body: ElevatedButton(
         onPressed: () {
-          context.read<FoodCartProvider>().addItem(
+          context.read<FoodCartProvider>().addFoodCartItem(
                 FoodCartItem(
                   name: "FRIES",
                   price: 5000,
