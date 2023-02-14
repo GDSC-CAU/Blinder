@@ -3,7 +3,7 @@ import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 
 class MenuButton extends StatelessWidget {
-  static double menuButtonHeight = 60;
+  static double menuButtonHeight = 70;
 
   final String text;
   final String? ttsText;
@@ -43,14 +43,16 @@ class MenuButton extends StatelessWidget {
           fixedSize: Size(width, menuButtonHeight),
           enableFeedback: true,
         ),
-        child: child ??
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.w700,
+        child: SingleChildScrollView(
+          child: child ??
+              Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
+        ),
       ),
     );
   }

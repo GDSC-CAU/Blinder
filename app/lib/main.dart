@@ -1,10 +1,13 @@
 import 'package:app/providers/providers.dart';
 import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
+import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  initTts();
   initializeCameraInstance(
     resolution: ResolutionPreset.max,
   );

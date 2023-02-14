@@ -6,12 +6,15 @@ import 'package:app/screens/food_receipt_screen.dart';
 import 'package:app/screens/main_voice_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/food_order.dart';
+
 enum RouterPath {
   mainVoice,
   foodMenuScan,
   foodCategory,
   foodMenu,
   foodCounting,
+  foodOrder,
   foodReceipt,
 }
 
@@ -23,6 +26,7 @@ class AppRouter {
   static const String foodCategoryPath = "/food-category";
   static const String foodCountingPath = "/food-counting";
   static const String foodMenuPath = "/food-menu";
+  static const String foodOrderPath = "/food-order";
   static const String foodReceiptPath = "/food-receipt";
 
   static const Map<RouterPath, String> routePath = {
@@ -31,6 +35,7 @@ class AppRouter {
     RouterPath.foodCategory: foodCategoryPath,
     RouterPath.foodCounting: foodCountingPath,
     RouterPath.foodMenu: foodMenuPath,
+    RouterPath.foodOrder: foodOrderPath,
     RouterPath.foodReceipt: foodReceiptPath,
   };
 
@@ -45,6 +50,8 @@ class AppRouter {
         const FoodMenuScreen(),
     routePath[RouterPath.foodCounting] ?? foodCountingPath: (context) =>
         const FoodCountingScreen(),
+    routePath[RouterPath.foodOrder] ?? foodOrderPath: (context) =>
+        const FoodOrderScreen(),
     routePath[RouterPath.foodReceipt] ?? foodReceiptPath: (context) =>
         const FoodReceiptScreen(),
   };

@@ -18,53 +18,63 @@ class FoodMenuScreen extends StatelessWidget {
     final foodList = Provider.of<FoodMapProvider>(context)
         .getFoodMenuByCategory(selectedFoodCategory);
 
-    final listHeight =
-        MediaQuery.of(context).size.height - AppBar().preferredSize.height - 55;
-
     ttsController.speak("$selectedFoodCategory를 선택하셨습니다, 이제 원하는 음식을 선택해주세요");
 
     return AppScaffold(
       body: Column(
         children: [
-          const ScreenTitle(title: "음식 선택"),
-          SizedBox(
-            height: listHeight,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  final food = foodList[index];
-                  return MenuButton(
-                    text: "${food.name}, ${food.price}원",
-                    onPressed: () {
-                      AppRouter.move(
-                        context,
-                        to: RouterPath.foodCounting,
-                      );
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          food.name,
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
+          Flexible(
+            child: Column(
+              children: const [
+                ScreenTitle(title: "음식 선택"),
+              ],
+            ),
+          ),
+          Flexible(
+            flex: 9,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: ListView.builder(
+                      itemBuilder: (context, index) {
+                        final food = foodList[index];
+                        return MenuButton(
+                          text: "${food.name}, ${food.price}원",
+                          onPressed: () {
+                            AppRouter.move(
+                              context,
+                              to: RouterPath.foodCounting,
+                              arguments: food,
+                            );
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                food.name,
+                                style: const TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                "${food.price}원",
+                                style: const TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        Text(
-                          "${food.price}원",
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                        );
+                      },
+                      itemCount: foodList.length,
                     ),
-                  );
-                },
-                itemCount: foodList.length,
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
