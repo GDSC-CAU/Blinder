@@ -53,7 +53,7 @@ class MainTestPage extends StatelessWidget {
             future: fetchJson(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                final controller = Provider.of<FoodMapProvider>(context);
+                final controller = context.read<FoodMapProvider>();
                 controller.updateFoodMapFromJson(snapshot.data!);
 
                 return Column(

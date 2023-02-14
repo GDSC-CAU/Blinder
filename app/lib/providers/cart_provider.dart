@@ -4,13 +4,20 @@ import 'package:flutter/material.dart';
 class FoodCartProvider with ChangeNotifier {
   final List<FoodCartItem> foodCartItems = [];
 
-  void addItem(FoodCartItem newFoodCartItem) {
+  void addFoodCartItem(FoodCartItem newFoodCartItem) {
     foodCartItems.add(newFoodCartItem);
-    _printItems();
+    _printFoodCartItems();
     notifyListeners();
   }
 
-  void _printItems() {
+  void clearFoodCartItems() {
+    foodCartItems.clear();
+  }
+
+  num getTotalPrice() =>
+      foodCartItems.map((item) => item.price).reduce((prev, cur) => prev + cur);
+
+  void _printFoodCartItems() {
     print('Print Cart Items');
     foodCartItems.map((e) => e.toString()).forEach(print);
     print('');

@@ -78,7 +78,8 @@ class _FoodMenuScanScreenState extends State<FoodMenuScanScreen> {
                       appCameraController.controller,
                     ),
                   ),
-                  FloatingActionCameraButton(
+                  BottomButton(
+                    text: "매뉴판 촬영 하기",
                     onPressed: () async {
                       final capturedImage =
                           await appCameraController.controller.takePicture();
@@ -92,23 +93,6 @@ class _FoodMenuScanScreenState extends State<FoodMenuScanScreen> {
                 ],
               ),
       ),
-    );
-  }
-}
-
-class FloatingActionCameraButton extends StatelessWidget {
-  final void Function() onPressed;
-
-  const FloatingActionCameraButton({
-    super.key,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomButton(
-      text: "매뉴판 촬영 하기",
-      onPressed: onPressed,
     );
   }
 }

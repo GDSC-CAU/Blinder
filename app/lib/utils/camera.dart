@@ -56,8 +56,12 @@ class AppCameraController {
     int cameraSelectionIndex = 0,
     ImageFormatGroup? imageFormatGroup,
   }) {
-    status = CameraStatus.loading;
+    if (cameras.isEmpty) {
+      status = CameraStatus.error;
+      throw Exception("There is no camera at connected device");
+    }
 
+    status = CameraStatus.loading;
     return CameraController(
       cameras[cameraSelectionIndex],
       resolution,
