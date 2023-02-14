@@ -15,8 +15,6 @@ class FoodCategoryScreen extends StatelessWidget {
     ttsController.speak("원하는 음식의 카테고리를 선택해주세요");
 
     final foodCategoryList = context.read<FoodMapProvider>().getFoodCategory();
-    final listHeight =
-        MediaQuery.of(context).size.height - AppBar().preferredSize.height - 55;
 
     return AppScaffold(
       body: Column(
@@ -28,30 +26,32 @@ class FoodCategoryScreen extends StatelessWidget {
           ),
           Flexible(
             flex: 9,
-            child:
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: ListView.builder(
-                    itemBuilder: (context, index) {
-                      final foodCategory = foodCategoryList[index];
-                      return MenuButton(
-                        text: foodCategory,
-                        onPressed: () {
-                          AppRouter.move(
-                            context,
-                            to: RouterPath.foodMenu,
-                            arguments: foodCategory,
-                          );
-                        },
-                      );
-                    },
-                    itemCount: foodCategoryList.length,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: ListView.builder(
+                      itemBuilder: (context, index) {
+                        final foodCategory = foodCategoryList[index];
+                        return MenuButton(
+                          text: foodCategory,
+                          onPressed: () {
+                            AppRouter.move(
+                              context,
+                              to: RouterPath.foodMenu,
+                              arguments: foodCategory,
+                            );
+                          },
+                        );
+                      },
+                      itemCount: foodCategoryList.length,
+                    ),
                   ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ],
       ),
