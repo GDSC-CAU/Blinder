@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  initTts();
-  initializeCameraInstance(
+  await initTts();
+  await initializeCameraInstance(
     resolution: ResolutionPreset.max,
   );
 
