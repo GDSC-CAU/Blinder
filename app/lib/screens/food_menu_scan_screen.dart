@@ -34,64 +34,72 @@ class _FoodMenuScanScreenState extends State<FoodMenuScanScreen> {
     super.dispose();
   }
 
+  void moveToFoodCategory() {
+    AppRouter.move(
+      context,
+      to: RouterPath.foodCategory,
+    );
+    appCameraController.destroyController();
+  }
+
+  Future<void> captureMenuBoardImage() async {
+    final capturedImage = await appCameraController.controller.takePicture();
+
+    setState(() {
+      _capturedImage = File(capturedImage.path);
+      _isCaptured = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (appCameraController.controller.value.isInitialized == false) {
+    if (AppCameraController.status == CameraStatus.loading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
-    final viewSize = MediaQuery.of(context).size;
-    final cameraViewWidth = viewSize.width;
-    final cameraViewHeight = viewSize.height;
+    final screenSize = MediaQuery.of(context).size;
 
-    return Scaffold(
-      body: Center(
-        child: _isCaptured
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: CapturedImage(
-                      imageFile: _capturedImage!,
+    return WillPopScope(
+      onWillPop: () async {
+        appCameraController.destroyController();
+        return true;
+      },
+      child: Scaffold(
+        body: Center(
+          child: _isCaptured
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: CapturedImage(
+                        imageFile: _capturedImage!,
+                      ),
                     ),
-                  ),
-                  BottomButton(
-                    text: "음식 주문하기",
-                    onPressed: () {
-                      AppRouter.move(
-                        context,
-                        to: RouterPath.foodCategory,
-                      );
-                    },
-                  )
-                ],
-              )
-            : Stack(
-                alignment: Alignment.bottomCenter,
-                children: [
-                  SizedBox(
-                    width: cameraViewWidth,
-                    height: cameraViewHeight,
-                    child: CameraPreview(
-                      appCameraController.controller,
+                    BottomButton(
+                      text: "음식 주문하기",
+                      onPressed: moveToFoodCategory,
+                    )
+                  ],
+                )
+              : Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    SizedBox(
+                      width: screenSize.width,
+                      height: screenSize.height,
+                      child: CameraPreview(
+                        appCameraController.controller,
+                      ),
                     ),
-                  ),
-                  BottomButton(
-                    text: "매뉴판 촬영 하기",
-                    onPressed: () async {
-                      final capturedImage =
-                          await appCameraController.controller.takePicture();
-
-                      _capturedImage = File(capturedImage.path);
-                      setState(() {
-                        _isCaptured = true;
-                      });
-                    },
-                  ),
-                ],
-              ),
+                    BottomButton(
+                      text: "매뉴판 촬영 하기",
+                      onPressed: captureMenuBoardImage,
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
