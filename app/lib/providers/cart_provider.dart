@@ -1,3 +1,4 @@
+import 'package:app/common/styles/colors.dart';
 import 'package:app/models/food_cart_item.dart';
 import 'package:flutter/material.dart';
 
@@ -14,8 +15,11 @@ class FoodCartProvider with ChangeNotifier {
     foodCartItems.clear();
   }
 
-  num getTotalPrice() =>
-      foodCartItems.map((item) => item.price).reduce((prev, cur) => prev + cur);
+  num getTotalPrice() => foodCartItems.fold(
+        0,
+        (previousValue, element) =>
+            previousValue + element.price * element.count,
+      );
 
   void _printFoodCartItems() {
     print('Print Cart Items');
@@ -27,9 +31,32 @@ class FoodCartProvider with ChangeNotifier {
       .map(
         (item) => DataRow(
           cells: [
-            DataCell(Text(item.name)),
-            DataCell(Text("${item.count}")),
-            DataCell(Text("${item.price}")),
+            DataCell(
+              Text(
+                item.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataCell(
+              Text(
+                "${item.count}개",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataCell(
+              Text(
+                "${item.price}원",
+                style: const TextStyle(
+                  decoration: TextDecoration.underline,
+                  decorationColor: Palette.$brown700,
+                  decorationStyle: TextDecorationStyle.wavy,
+                ),
+              ),
+            ),
           ],
         ),
       )
