@@ -11,14 +11,13 @@ enum CameraStatus {
 }
 
 class AppCameraController {
+  static AppCameraController? _instance;
   static CameraStatus status = CameraStatus.loading;
 
   final List<CameraDescription> cameras;
-  final CameraController controller;
+  CameraController controller;
   final ResolutionPreset resolution;
   final ImageFormatGroup? imageFormatGroup;
-
-  static AppCameraController? _instance;
 
   factory AppCameraController({
     required List<CameraDescription> cameras,
@@ -39,7 +38,7 @@ class AppCameraController {
     required this.resolution,
     int cameraSelectionIndex = 0,
     this.imageFormatGroup,
-  }) : controller = createCameraController(
+  }) : controller = _createCameraController(
           cameras: cameras,
           resolution: resolution,
           cameraSelectionIndex: cameraSelectionIndex <= cameras.length
@@ -50,7 +49,7 @@ class AppCameraController {
           imageFormatGroup: imageFormatGroup,
         );
 
-  static CameraController createCameraController({
+  static CameraController _createCameraController({
     required List<CameraDescription> cameras,
     required ResolutionPreset resolution,
     int cameraSelectionIndex = 0,
@@ -80,22 +79,30 @@ class AppCameraController {
   }
 
   void destroyController() {
-    status = CameraStatus.destroyed;
     controller.dispose();
     controller.debugCheckIsDisposed();
+    status = CameraStatus.destroyed;
   }
 
   void initializeCamera(FutureOr<dynamic> Function(void) initializer) {
+    if (status == CameraStatus.destroyed) {
+      status = CameraStatus.loading;
+      controller = _createCameraController(
+        cameras: cameras,
+        resolution: resolution,
+      );
+    }
+
     controller.initialize().then(
       (_) {
-        status = CameraStatus.success;
         initializer(_);
+        status = CameraStatus.success;
       },
     ).catchError(
       (Object error) {
-        if (error is CameraException) {
-          status = CameraStatus.error;
+        status = CameraStatus.error;
 
+        if (error is CameraException) {
           switch (error.code) {
             case 'CameraAccessDenied':
               print("CAMERA: CameraAccessDenied, ${error.code}");
