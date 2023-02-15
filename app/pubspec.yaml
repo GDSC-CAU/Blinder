@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+    sdk: ">=2.19.0 <3.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -28,28 +28,27 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  camera: ^0.10.3
-  cupertino_icons: ^1.0.2
-  flutter:
-    sdk: flutter
-  flutter_tesseract_ocr: ^0.4.20
-  flutter_tts: ^3.6.3
-  google_ml_kit: ^0.13.0
-  http: ^0.13.5
-  image_picker: ^0.8.6+1
-  intl: ^0.18.0
-  provider: ^6.0.5
+    camera: ^0.10.3
+    cupertino_icons: ^1.0.2
+    flutter:
+        sdk: flutter
+    flutter_tts: ^3.6.3
+    google_ml_kit: ^0.13.0
+    http: ^0.13.5
+    image_picker: ^0.8.6+1
+    intl: ^0.18.0
+    provider: ^6.0.5
 
 dev_dependencies:
-  flutter_lints: ^2.0.0
-  flutter_test:
-    sdk: flutter
+    flutter_lints: ^2.0.0
+    flutter_test:
+        sdk: flutter
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 # The following section is specific to Flutter packages.
 flutter:
-  assets:
-    - assets/tessdata/eng.traineddata
-    - assets/tessdata/kor.traineddata
-    - assets/tessdata_config.json
-  uses-material-design: true
+    assets:
+        - assets/tessdata/eng.traineddata
+        - assets/tessdata/kor.traineddata
+        - assets/tessdata_config.json
+    uses-material-design: true
