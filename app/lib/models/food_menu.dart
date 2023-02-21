@@ -7,7 +7,7 @@ class FoodMenu implements Model<FoodMenu> {
   @override
   void set(JsonMap jsonMap) {
     name = jsonMap["name"] as String;
-    price = int.parse(jsonMap["price"] as String);
+    price = num.tryParse(jsonMap["price"] as String) ?? 0;
   }
 
   @override
