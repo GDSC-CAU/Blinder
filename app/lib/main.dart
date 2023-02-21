@@ -1,5 +1,5 @@
 import 'package:app/providers/providers.dart';
-import 'package:app/screens/test/ocr/main_ocr_test_screen.dart';
+import 'package:app/screens/test/ocr/ocr_screen.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
@@ -18,7 +18,7 @@ class Blinder extends StatelessWidget {
         // routes: AppRouter.routes,
         // home: AppRouter.initialScreen,
         // initialRoute: AppRouter.mainVoicePath,
-        home: MainOcrTestScreen(),
+        home: OcrScreen(),
       ),
     );
   }
