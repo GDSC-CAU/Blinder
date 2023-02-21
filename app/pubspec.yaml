@@ -39,12 +39,13 @@ dependencies:
     intl: ^0.18.0
     provider: ^6.0.5
     photofilters: ^3.0.1
-    image: ^4.0.15
+    image: ^3.0.1
 
 dev_dependencies:
     flutter_lints: ^2.0.0
     flutter_test:
         sdk: flutter
+    logger: ^1.1.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 # The following section is specific to Flutter packages.
