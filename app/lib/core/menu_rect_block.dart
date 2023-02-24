@@ -1,4 +1,5 @@
 import 'package:app/core/text_rect_block.dart';
+import 'package:app/utils/text.dart';
 
 class MenuRectBlock {
   String text;
@@ -9,12 +10,23 @@ class MenuRectBlock {
     required this.textRectBlock,
   });
 
+  /// Check combinable state based on box coordinates
+  ///
+  /// `toleranceX` - avg height of blocks
+  ///
+  /// `toleranceY` - avg height / 2 of blocks
   static bool getCombinableState(
     MenuRectBlock target,
-    MenuRectBlock combineTarget,
-  ) {
+    MenuRectBlock combineTarget, {
+    required int toleranceX,
+    required int toleranceY,
+  }) {
     final isSelfConflict = target.text.contains(combineTarget.text);
     if (isSelfConflict) return false;
+
+    if (isPriceText(target.text) || isPriceText(combineTarget.text)) {
+      return false;
+    }
 
     final targetA = target.textRectBlock;
     final targetB = combineTarget.textRectBlock;
@@ -24,21 +36,36 @@ class MenuRectBlock {
         ? (targetB.tl.x - targetA.tr.x).abs()
         : (targetA.tl.x - targetB.tr.x).abs();
     final distanceY = (targetA.center.y - targetB.center.y).abs();
-    final boxHeightDifference = (targetA.height - targetB.height).abs();
 
-    final isCombinable =
-        distanceX <= 50 && distanceY <= 30 && boxHeightDifference <= 20;
-
+    final isCombinable = distanceX <= toleranceX && distanceY <= toleranceY;
     return isCombinable;
   }
 
+  /// Combine two block into one block
+  ///
+  /// use it with `MenuRectBlock.getCombinableState()`
+  ///
+  /// ```dart
+  /// final block1 = "...";
+  /// final block2 = "...";
+  /// ///check condition
+  /// if (MenuRectBlock.getCombinableState(
+  ///   block1,
+  ///   block2,
+  /// )) {
+  ///   final combinedBlock = MenuRectBlock.combine(
+  ///     block1,
+  ///     block2,
+  ///   );
+  ///}
+  /// ```
   factory MenuRectBlock.combine(
     MenuRectBlock target,
     MenuRectBlock combineTarget,
   ) {
     final targetA = target.textRectBlock;
     final targetB = combineTarget.textRectBlock;
-    final isTargetALeft = targetA.tr.x <= targetB.tl.x;
+    final isTargetALeft = targetA.center.x <= targetB.center.x;
 
     return MenuRectBlock(
       text: isTargetALeft
