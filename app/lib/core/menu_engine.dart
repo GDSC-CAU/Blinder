@@ -3,8 +3,9 @@ import 'package:app/core/menu_rect_block.dart';
 import 'package:app/core/statics.dart';
 import 'package:app/core/text_rect_block.dart';
 import 'package:app/models/food_menu.dart';
-import 'package:app/utils/array_util.dart';
+import 'package:app/utils/array.dart';
 import 'package:app/utils/sort.dart';
+import 'package:app/utils/text.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class MenuEngine {
@@ -90,11 +91,10 @@ class MenuEngine {
   }
 
   void _setupBlockList() {
-    _sortBlockListByCoordXY();
+    _sortBlockListByCoordYX();
     _normalizeBlockList();
-
-    _combineBlockList();
-    _combineBlockList();
+    _filterBlockByHeightDistribution();
+    _combineBlockListBySearchRange();
   }
 
   // ignore: use_setters_to_change_properties
@@ -102,8 +102,8 @@ class MenuEngine {
     menuRectBlockList = updatedList;
   }
 
-  /// sort coord by `x` and `y`
-  void _sortBlockListByCoordXY() {
+  /// sort coord by `y` -> `x`
+  void _sortBlockListByCoordYX() {
     menuRectBlockList.sort(
       (blockA, blockB) => ascendingSort(
         blockA.textRectBlock.center.y,
@@ -170,6 +170,11 @@ class MenuEngine {
     return normalizedData;
   }
 
+  /// normalize block coord and height
+  /// ```dart
+  /// final unNormalized = [1,2,2,1,3,2,1, 11,10,12,10,12,13, 21,22,23,21,22,21];
+  /// final normalized = [2,2,2,2,2,2,2, 11,11,11,11,11,11, 22,22,22,22,22,22,22];
+  /// ```
   void _normalizeBlockList() {
     final yCoordList =
         menuRectBlockList.map((e) => e.textRectBlock.tl.y).toList();
@@ -217,35 +222,162 @@ class MenuEngine {
     _updateMenuRectBlockList(normalizedMenuRectBlockList);
   }
 
-  void _combineBlockList() {
+  void _combineBlockListBySearchRange({
+    int searchRange = 3,
+  }) {
+    MenuRectBlock _getCombinedBlockByRange({
+      required MenuRectBlockList list,
+      required int listHeightAvg,
+      required int beforeRange,
+      required int afterRange,
+      required int currIndex,
+    }) {
+      final self = list[currIndex];
+
+      final beforeRangeList =
+          list.getRange(currIndex - beforeRange, currIndex).toList();
+      final afterRangeList =
+          list.getRange(currIndex + 1, afterRange + (currIndex + 1)).toList();
+      final testRange = [...beforeRangeList, ...afterRangeList];
+
+      final combinedBlock = testRange.folder<MenuRectBlockList>(
+        [self],
+        (combined, currBlock, i, tot) {
+          if (MenuRectBlock.getCombinableState(
+            combined.last,
+            currBlock,
+            toleranceX: listHeightAvg,
+            toleranceY: listHeightAvg ~/ 2,
+          )) {
+            final combinedBlock = MenuRectBlock.combine(
+              combined.last,
+              currBlock,
+            );
+            combined.add(combinedBlock);
+            return combined;
+          }
+
+          return combined;
+        },
+      ).last;
+
+      return combinedBlock;
+    }
+
+    bool _isNameDuplicated(
+      String newTarget,
+      String origin,
+    ) =>
+        newTarget.contains(origin);
+
+    bool _isSelfDuplicated(
+      MenuRectBlock blockSelf,
+      MenuRectBlockList blockList,
+    ) {
+      final textList = blockList.map((e) => e.text);
+      final shouldRemoveSelf = textList.fold<List<bool>>(
+        [],
+        (acc, curr) {
+          acc.add(_isNameDuplicated(curr, blockSelf.text));
+          return acc;
+        },
+      ).any((element) => element == true);
+
+      return shouldRemoveSelf;
+    }
+
+    MenuRectBlockList _getDeduplicatedBlock({
+      required MenuRectBlock targetBlock,
+      required MenuRectBlockList totBlock,
+    }) {
+      final List<int> duplicatedIndexList = totBlock.folder(
+        [],
+        (acc, curr, i, _) {
+          if (_isNameDuplicated(targetBlock.text, curr.text)) {
+            acc.add(i);
+            return acc;
+          }
+          return acc;
+        },
+      );
+
+      return totBlock.filter(
+        (current, i) => duplicatedIndexList.contains(i) == false,
+      );
+    }
+
+    Map<String, int> _getRangeByCurrentIndex({
+      required int currentIndex,
+      required int givenRange,
+      required int totLength,
+    }) {
+      if (currentIndex - searchRange < 0) {
+        return {
+          "before": currentIndex,
+          "after": givenRange,
+        };
+      }
+      if (searchRange + (currentIndex + 1) > totLength) {
+        return {
+          "before": givenRange,
+          "after": totLength - (currentIndex + 1),
+        };
+      }
+      return {
+        "before": givenRange,
+        "after": givenRange,
+      };
+    }
+
     final combinedBlockList = menuRectBlockList.folder<MenuRectBlockList>(
       [],
-      (combined, block, i, tot) {
-        final isBeginEndPoint = i == 0 || i == menuRectBlockList.length;
-        if (isBeginEndPoint) {
-          combined.add(block);
-          return combined;
+      (combinedList, currBlock, i, _) {
+        if (i == 0) {
+          combinedList.add(currBlock);
+          return combinedList;
         }
 
-        final isCombinable = MenuRectBlock.getCombinableState(
-          combined.last,
-          block,
-        );
-        if (isCombinable) {
-          final combinedBlock = MenuRectBlock.combine(
-            combined.last,
-            block,
-          );
-          combined.removeLast();
-          combined.add(combinedBlock);
-          return combined;
-        } else {
-          combined.add(block);
-          return combined;
+        if (isPriceText(currBlock.text)) {
+          combinedList.add(currBlock);
+          return combinedList;
         }
+        final calculatedRange = _getRangeByCurrentIndex(
+          currentIndex: i,
+          givenRange: searchRange,
+          totLength: menuRectBlockList.length,
+        );
+
+        final combinedBlock = _getCombinedBlockByRange(
+          currIndex: i,
+          list: menuRectBlockList,
+          listHeightAvg: Statics.avg(
+            menuRectBlockList
+                .map(
+                  (e) => e.textRectBlock.height,
+                )
+                .toList(),
+          ).toInt(),
+          beforeRange: calculatedRange["before"]!,
+          afterRange: calculatedRange["after"]!,
+        );
+
+        combinedList = _getDeduplicatedBlock(
+          targetBlock: combinedBlock,
+          totBlock: combinedList,
+        );
+
+        if (_isSelfDuplicated(combinedBlock, combinedList)) {
+          return combinedList;
+        }
+
+        combinedList.add(combinedBlock);
+        return combinedList;
       },
     );
 
     _updateMenuRectBlockList(combinedBlockList);
   }
+
+  ///TODO: height의 분포를 기준으로 description / 쓸데 없는 block 필터링 후 병합
+  void _filterBlockByHeightDistribution() {}
 }
