@@ -2,8 +2,9 @@ import 'package:app/core/menu_rect_block.dart';
 import 'package:app/core/statics.dart';
 import 'package:app/models/food_menu.dart';
 import 'package:app/models/model_factory.dart';
-import 'package:app/utils/array_util.dart';
+import 'package:app/utils/array.dart';
 import 'package:app/utils/sort.dart';
+import 'package:app/utils/text.dart';
 
 typedef MenuRectBlockList = List<MenuRectBlock>;
 typedef CategoryFilterFunction = bool Function(String category);
@@ -45,25 +46,6 @@ class MenuParser {
     return targetList;
   }
 
-  bool _isPriceText(String text) {
-    const price = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-    const priceTextBoundaryCount = 2;
-    final isPriceText = text.split("").fold<List<bool>>(
-          [],
-          (priceTextTester, currText) {
-            priceTextTester.add(price.contains(currText));
-            return priceTextTester;
-          },
-        ).fold(
-          0,
-          (numberOfPriceText, currentState) =>
-              currentState ? numberOfPriceText + 1 : numberOfPriceText,
-        ) >=
-        priceTextBoundaryCount;
-
-    return isPriceText;
-  }
-
   FoodMenu _generateFoodMenu(JsonMap jsonMap) {
     final foodMenu = ModelFactory(FoodMenu());
     foodMenu.serialize(jsonMap);
@@ -75,7 +57,7 @@ class MenuParser {
   List<FoodMenu> getAllFoodMenu() {
     final menuList =
         menuRectBlockList.fold<List<FoodMenu>>([], (filteredMenuList, block) {
-      if (_isPriceText(block.text)) return filteredMenuList;
+      if (isPriceText(block.text)) return filteredMenuList;
 
       final searchedByCurrentY = _searchAxisByY(
         block,
@@ -89,7 +71,7 @@ class MenuParser {
       if (rightSideOfCurrentX.isEmpty) return filteredMenuList;
 
       final rightSide = rightSideOfCurrentX.first;
-      if (_isPriceText(rightSide.text) == false) return filteredMenuList;
+      if (isPriceText(rightSide.text) == false) return filteredMenuList;
 
       final foodMenu = _generateFoodMenu({
         "name": block.text,
@@ -135,7 +117,7 @@ class MenuParser {
     ///TODO: 일단 제외 / align condition 추가
     final categoryTextBlocksByMoneyCondition = categoryTextBlocksByHeight
         .fold<MenuRectBlockList>([], (filtered, block) {
-      if (_isPriceText(block.text)) return filtered;
+      if (isPriceText(block.text)) return filtered;
 
       final searchedByCurrentY = _searchAxisByY(
         block,
@@ -151,7 +133,7 @@ class MenuParser {
         return filtered;
       }
 
-      if (rightSideOfCurrentX.any((block) => _isPriceText(block.text))) {
+      if (rightSideOfCurrentX.any((block) => isPriceText(block.text))) {
         final heightList =
             rightSideOfCurrentX.map((e) => e.textRectBlock.height).toList();
 
