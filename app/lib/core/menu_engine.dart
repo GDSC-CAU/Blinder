@@ -40,7 +40,7 @@ class MenuEngine {
     _parser.menuRectBlockList = menuRectBlockList;
   }
 
-  /// parse food menu
+  /// Parse food menu
   Future<void> parse(
     InputImage image,
   ) async {
@@ -152,30 +152,6 @@ class MenuEngine {
     _updateMenuRectBlockList(sortedMenuBlockList);
   }
 
-  List<int> _normalize(List<int> dataList, int interval) {
-    final double avg = Statics.avg(dataList);
-    final int tolerance = interval ~/ 2;
-
-    final List<int> normalizedData = dataList.map(
-      (data) {
-        final normalizedValue =
-            ((data - avg) ~/ interval) * interval + avg.toInt();
-        final diff = (data - normalizedValue).abs();
-
-        return (diff <= tolerance)
-            ? normalizedValue
-            : (normalizedValue + interval);
-      },
-    ).toList();
-
-    return normalizedData;
-  }
-
-  /// normalize block coord and height
-  /// ```dart
-  /// final unNormalized = [1,2,2,1,3,2,1, 11,10,12,10,12,13, 21,22,23,21,22,21];
-  /// final normalized = [2,2,2,2,2,2,2, 11,11,11,11,11,11, 22,22,22,22,22,22,22];
-  /// ```
   void _normalizeBlockList() {
     final yCoordList =
         menuRectBlockList.map((e) => e.textRectBlock.tl.y).toList();
@@ -190,8 +166,14 @@ class MenuEngine {
     });
     final yCoordDiffStd = Statics.std(yCoordDiffList).toInt();
 
-    final normalizedYCoordList = _normalize(yCoordList, yCoordDiffStd);
-    final normalizedHeight = _normalize(heightList, heightStd);
+    final normalizedYCoordList = Statics.normalize(
+      intList: yCoordList,
+      interval: yCoordDiffStd,
+    );
+    final normalizedHeight = Statics.normalize(
+      intList: heightList,
+      interval: heightStd,
+    );
 
     final normalizedMenuRectBlockList =
         normalizedYCoordList.folder<MenuRectBlockList>(

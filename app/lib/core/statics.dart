@@ -141,4 +141,39 @@ class Statics {
 
     return numbers[quartileIndexList[at]];
   }
+
+  /// Normalize int list by `interval`
+  /// ```dart
+  /// final unNormalized = [
+  ///       1,2,2,1,3,2,1,
+  ///       11,10,12,10,12,13,
+  ///       21,22,23,21,22,21
+  /// ];
+  /// final normalized = [
+  ///       2,2,2,2,2,2,2,
+  ///       11,11,11,11,11,11,
+  ///       22,22,22,22,22,22,22
+  /// ];
+  /// ```
+  static List<int> normalize({
+    required List<int> intList,
+    required int interval,
+  }) {
+    final double avg = Statics.avg(intList);
+    final int tolerance = interval ~/ 2;
+
+    final List<int> normalizedData = intList.map(
+      (data) {
+        final normalizedValue =
+            ((data - avg) ~/ interval) * interval + avg.toInt();
+        final diff = (data - normalizedValue).abs();
+
+        return (diff <= tolerance)
+            ? normalizedValue
+            : (normalizedValue + interval);
+      },
+    ).toList();
+
+    return normalizedData;
+  }
 }
