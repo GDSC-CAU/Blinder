@@ -94,6 +94,7 @@ class MenuEngine {
     _sortBlockListByCoordYX();
     _normalizeBlockList();
     _filterBlockByHeightDistribution();
+    _sortBlockListByCoordYX();
     _combineBlockListBySearchRange();
   }
 
@@ -378,6 +379,36 @@ class MenuEngine {
     _updateMenuRectBlockList(combinedBlockList);
   }
 
-  ///TODO: height의 분포를 기준으로 description / 쓸데 없는 block 필터링 후 병합
-  void _filterBlockByHeightDistribution() {}
+  /// Filter tiny & huge text by rect height
+  void _filterBlockByHeightDistribution() {
+    final heightList =
+        menuRectBlockList.map((e) => e.textRectBlock.height).toList();
+
+    bool _getFilterStateByStepPoints(
+      int currentIndex, {
+      required int? first,
+      required int? last,
+    }) {
+      if (first == null) return false;
+      if (last == null) return currentIndex <= first;
+      return currentIndex <= first || currentIndex > last;
+    }
+
+    final stepPoints = Statics.getSideStepPoint(heightList);
+    final filteredMenuBlockList = menuRectBlockList.folder<MenuRectBlockList>(
+      [],
+      (filtered, block, currentIndex, _) {
+        if (_getFilterStateByStepPoints(
+          currentIndex,
+          first: stepPoints["first"],
+          last: stepPoints["last"],
+        )) return filtered;
+
+        filtered.add(block);
+        return filtered;
+      },
+    );
+
+    _updateMenuRectBlockList(filteredMenuBlockList);
+  }
 }
