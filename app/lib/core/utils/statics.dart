@@ -1,3 +1,4 @@
+
 import 'dart:math';
 
 import 'package:app/utils/array.dart';
@@ -5,17 +6,23 @@ import 'package:app/utils/array.dart';
 class Statics {
   Statics();
 
-  static double avg(List<int> numbers) => numbers.isEmpty
-      ? 0
-      : numbers.reduce((value, element) => value + element) / numbers.length;
+  static List<num> _toNumbers<T>(List<T> mightBeNumbers) =>
+      mightBeNumbers.map((e) => num.parse("$e")).toList();
 
-  static num std(List<int> numbers) {
+  static num avg(List<num> numbers) {
+    return numbers.isEmpty
+        ? 0
+        : _toNumbers(numbers).reduce((value, element) => value + element) /
+            numbers.length;
+  }
+
+  static num std(List<num> numbers) {
     final numbersAvg = avg(numbers);
     final numbersLength = numbers.length;
     return sqrt(
       numbers.isEmpty
           ? 0
-          : numbers.reduce(
+          : _toNumbers(numbers).reduce(
               (
                 value,
                 number,
@@ -114,8 +121,8 @@ class Statics {
     };
   }
 
-  static int getQuartileAt(
-    List<int> numbers, {
+  static num getQuartileAt(
+    List<num> numbers, {
     required int at,
     int divide = 10,
   }) {
@@ -156,10 +163,10 @@ class Statics {
   /// ];
   /// ```
   static List<int> normalize({
-    required List<int> intList,
+    required List<num> intList,
     required int interval,
   }) {
-    final double avg = Statics.avg(intList);
+    final avg = Statics.avg(intList);
     final int tolerance = interval ~/ 2;
 
     final List<int> normalizedData = intList.map(
