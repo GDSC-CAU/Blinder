@@ -1,10 +1,12 @@
+// ignore_for_file: constant_identifier_names, non_constant_identifier_names
+
+import 'package:app/core/block/block.dart';
+import 'package:app/core/block/menu_block.dart';
 import 'package:app/core/menu_parser.dart';
-import 'package:app/core/menu_rect_block.dart';
-import 'package:app/core/statics.dart';
-import 'package:app/core/text_rect_block.dart';
+import 'package:app/core/utils/sort.dart';
+import 'package:app/core/utils/statics.dart';
 import 'package:app/models/food_menu.dart';
 import 'package:app/utils/array.dart';
-import 'package:app/utils/sort.dart';
 import 'package:app/utils/text.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
@@ -13,9 +15,9 @@ class MenuEngine {
   final TextRecognizer _textRecognizer;
   final MenuParser _parser;
 
-  MenuRectBlockList menuRectBlockList = [];
+  MenuBlockList menuBlockList = [];
 
-  MenuRectBlockList get category => _parser.getCategory();
+  MenuBlockList get category => _parser.getCategory();
   List<FoodMenu> get foodMenu => _parser.getAllFoodMenu();
 
   MenuEngine({
@@ -33,35 +35,35 @@ class MenuEngine {
     final recognizedText = await _textRecognizer.processImage(image);
     _textRecognizer.close();
 
-    menuRectBlockList = _getMenuRectBlockListByRecognizedText(
+    menuBlockList = _getMenuRectBlockListByRecognizedText(
       recognizedText,
     );
     _setupBlockList();
-    _parser.menuRectBlockList = menuRectBlockList;
+    _parser.updateParserMenuRectBlockList(menuBlockList);
   }
 
   /// Parse food menu
   Future<void> parse(
     InputImage image,
   ) async {
-    if (menuRectBlockList.isNotEmpty) {
-      menuRectBlockList = [];
+    if (menuBlockList.isNotEmpty) {
+      menuBlockList = [];
     }
     await _initializeParserFromImage(image);
   }
 
-  MenuRectBlockList _getMenuRectBlockListByRecognizedText(
+  MenuBlockList _getMenuRectBlockListByRecognizedText(
     RecognizedText recognizedText,
   ) {
-    final MenuRectBlockList menuRectBlocks = [];
+    final MenuBlockList transformedMenuBlockList = [];
 
     for (final TextBlock block in recognizedText.blocks) {
       for (final TextLine line in block.lines) {
         for (final TextElement element in line.elements) {
-          menuRectBlocks.add(
-            MenuRectBlock(
+          transformedMenuBlockList.add(
+            MenuBlock(
               text: element.text,
-              textRectBlock: TextRectBlock(
+              block: Block(
                 initialPosition: RectPosition(
                   tl: Coord(
                     x: element.cornerPoints[0].x,
@@ -87,7 +89,7 @@ class MenuEngine {
       }
     }
 
-    return menuRectBlocks;
+    return transformedMenuBlockList;
   }
 
   void _setupBlockList() {
@@ -95,35 +97,38 @@ class MenuEngine {
     _normalizeBlockList();
     _filterBlockByHeightDistribution();
     _sortBlockListByCoordYX();
-    _combineBlockListBySearchRange();
+    _combineBlockListBySearchRange(
+      toleranceXRatio: 2,
+    );
+    _filterBlocksByKOREAN_JOSA_LIST();
+    _removeInvalidCharacters();
   }
 
   // ignore: use_setters_to_change_properties
-  void _updateMenuRectBlockList(MenuRectBlockList updatedList) {
-    menuRectBlockList = updatedList;
+  void _updateMenuBlockList(MenuBlockList updatedMenuBlockList) {
+    menuBlockList = updatedMenuBlockList;
   }
 
   /// sort coord by `y` -> `x`
   void _sortBlockListByCoordYX() {
-    menuRectBlockList.sort(
+    menuBlockList.sort(
       (blockA, blockB) => ascendingSort(
-        blockA.textRectBlock.center.y,
-        blockB.textRectBlock.center.y,
+        blockA.block.center.y,
+        blockB.block.center.y,
       ),
     );
 
-    final sortedMenuBlockList = menuRectBlockList.fold<MenuRectBlockList>(
+    final sortedMenuBlockList = menuBlockList.fold<MenuBlockList>(
       [],
       (sorted, block) {
         if (sorted.isEmpty ||
-            block.textRectBlock.center.y >=
-                sorted.last.textRectBlock.center.y) {
+            block.block.center.y >= sorted.last.block.center.y) {
           sorted.add(block);
           return sorted;
         }
 
-        final tempCenterCoord = sorted.last.textRectBlock.center;
-        final centerCoord = block.textRectBlock.center;
+        final tempCenterCoord = sorted.last.block.center;
+        final centerCoord = block.block.center;
 
         final centerCoordSortedByX = Coord(
           x: tempCenterCoord.x > centerCoord.x
@@ -132,12 +137,12 @@ class MenuEngine {
           y: centerCoord.y,
         );
 
-        final width = block.textRectBlock.width;
-        final height = block.textRectBlock.height;
+        final width = block.block.width;
+        final height = block.block.height;
 
-        sorted.last = MenuRectBlock(
+        sorted.last = MenuBlock(
           text: block.text,
-          textRectBlock: TextRectBlock(
+          block: Block(
             initialPosition: RectPosition.fromBox(
               centerCoordSortedByX,
               width: width,
@@ -149,14 +154,12 @@ class MenuEngine {
       },
     );
 
-    _updateMenuRectBlockList(sortedMenuBlockList);
+    _updateMenuBlockList(sortedMenuBlockList);
   }
 
   void _normalizeBlockList() {
-    final yCoordList =
-        menuRectBlockList.map((e) => e.textRectBlock.tl.y).toList();
-    final heightList =
-        menuRectBlockList.map((e) => e.textRectBlock.height).toList();
+    final yCoordList = menuBlockList.map((e) => e.block.tl.y).toList();
+    final heightList = menuBlockList.map((e) => e.block.height).toList();
 
     final heightStd = Statics.std(heightList).toInt();
     final yCoordDiffList = heightList.fold<List<int>>([], (acc, curr) {
@@ -176,18 +179,18 @@ class MenuEngine {
     );
 
     final normalizedMenuRectBlockList =
-        normalizedYCoordList.folder<MenuRectBlockList>(
+        normalizedYCoordList.folder<MenuBlockList>(
       [],
       (normalizedList, normalizedY, i, _) {
-        final currentMenuBlock = menuRectBlockList[i];
+        final currentMenuBlock = menuBlockList[i];
         final currentRectHeight = normalizedHeight[i];
 
-        final currentLeftX = currentMenuBlock.textRectBlock.tl.x;
-        final currentRightX = currentMenuBlock.textRectBlock.tr.x;
+        final currentLeftX = currentMenuBlock.block.tl.x;
+        final currentRightX = currentMenuBlock.block.tr.x;
 
-        final updatedMenuBlock = MenuRectBlock(
+        final updatedMenuBlock = MenuBlock(
           text: currentMenuBlock.text,
-          textRectBlock: TextRectBlock(
+          block: Block(
             initialPosition: RectPosition(
               tl: Coord(x: currentLeftX, y: normalizedY),
               bl: Coord(x: currentLeftX, y: normalizedY + currentRectHeight),
@@ -202,14 +205,16 @@ class MenuEngine {
       },
     );
 
-    _updateMenuRectBlockList(normalizedMenuRectBlockList);
+    _updateMenuBlockList(normalizedMenuRectBlockList);
   }
 
   void _combineBlockListBySearchRange({
     int searchRange = 3,
+    double toleranceXRatio = 1.5,
+    double toleranceYRatio = 0.5,
   }) {
-    MenuRectBlock _getCombinedBlockByRange({
-      required MenuRectBlockList list,
+    MenuBlock _getCombinedBlockByRange({
+      required MenuBlockList list,
       required int listHeightAvg,
       required int beforeRange,
       required int afterRange,
@@ -223,16 +228,16 @@ class MenuEngine {
           list.getRange(currIndex + 1, afterRange + (currIndex + 1)).toList();
       final testRange = [...beforeRangeList, ...afterRangeList];
 
-      final combinedBlock = testRange.folder<MenuRectBlockList>(
+      final combinedBlock = testRange.folder<MenuBlockList>(
         [self],
         (combined, currBlock, i, tot) {
-          if (MenuRectBlock.getCombinableState(
+          if (MenuBlock.getCombinableState(
             combined.last,
             currBlock,
-            toleranceX: listHeightAvg,
-            toleranceY: listHeightAvg ~/ 2,
+            toleranceX: (listHeightAvg * toleranceXRatio).toInt(),
+            toleranceY: (listHeightAvg * toleranceYRatio).toInt(),
           )) {
-            final combinedBlock = MenuRectBlock.combine(
+            final combinedBlock = MenuBlock.combine(
               combined.last,
               currBlock,
             );
@@ -254,8 +259,8 @@ class MenuEngine {
         newTarget.contains(origin);
 
     bool _isSelfDuplicated(
-      MenuRectBlock blockSelf,
-      MenuRectBlockList blockList,
+      MenuBlock blockSelf,
+      MenuBlockList blockList,
     ) {
       final textList = blockList.map((e) => e.text);
       final shouldRemoveSelf = textList.fold<List<bool>>(
@@ -269,9 +274,9 @@ class MenuEngine {
       return shouldRemoveSelf;
     }
 
-    MenuRectBlockList _getDeduplicatedBlock({
-      required MenuRectBlock targetBlock,
-      required MenuRectBlockList totBlock,
+    MenuBlockList _getDeduplicatedBlock({
+      required MenuBlock targetBlock,
+      required MenuBlockList totBlock,
     }) {
       final List<int> duplicatedIndexList = totBlock.folder(
         [],
@@ -312,7 +317,7 @@ class MenuEngine {
       };
     }
 
-    final combinedBlockList = menuRectBlockList.folder<MenuRectBlockList>(
+    final combinedBlockList = menuBlockList.folder<MenuBlockList>(
       [],
       (combinedList, currBlock, i, _) {
         if (i == 0) {
@@ -327,16 +332,16 @@ class MenuEngine {
         final calculatedRange = _getRangeByCurrentIndex(
           currentIndex: i,
           givenRange: searchRange,
-          totLength: menuRectBlockList.length,
+          totLength: menuBlockList.length,
         );
 
         final combinedBlock = _getCombinedBlockByRange(
           currIndex: i,
-          list: menuRectBlockList,
+          list: menuBlockList,
           listHeightAvg: Statics.avg(
-            menuRectBlockList
+            menuBlockList
                 .map(
-                  (e) => e.textRectBlock.height,
+                  (e) => e.block.height,
                 )
                 .toList(),
           ).toInt(),
@@ -358,13 +363,12 @@ class MenuEngine {
       },
     );
 
-    _updateMenuRectBlockList(combinedBlockList);
+    _updateMenuBlockList(combinedBlockList);
   }
 
   /// Filter tiny & huge text by rect height
   void _filterBlockByHeightDistribution() {
-    final heightList =
-        menuRectBlockList.map((e) => e.textRectBlock.height).toList();
+    final heightList = menuBlockList.map((e) => e.block.height).toList();
 
     bool _getFilterStateByStepPoints(
       int currentIndex, {
@@ -377,7 +381,7 @@ class MenuEngine {
     }
 
     final stepPoints = Statics.getSideStepPoint(heightList);
-    final filteredMenuBlockList = menuRectBlockList.folder<MenuRectBlockList>(
+    final filteredMenuBlockList = menuBlockList.folder<MenuBlockList>(
       [],
       (filtered, block, currentIndex, _) {
         if (_getFilterStateByStepPoints(
@@ -391,6 +395,84 @@ class MenuEngine {
       },
     );
 
-    _updateMenuRectBlockList(filteredMenuBlockList);
+    _updateMenuBlockList(filteredMenuBlockList);
+  }
+
+  void _removeInvalidCharacters() {
+    String removeNonKoreanEnglishPriceNumber(String input) {
+      final RegExp nonKoreanEnglishPriceNumber =
+          RegExp(r'[^\uAC00-\uD7A3ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,.]');
+      return input.replaceAll(nonKoreanEnglishPriceNumber, '').trim();
+    }
+
+    final removedNonKoreanEnglishNumber = menuBlockList
+        .map(
+          (e) => MenuBlock(
+            text: removeNonKoreanEnglishPriceNumber(e.text),
+            block: e.block,
+          ),
+        )
+        .toList();
+
+    _updateMenuBlockList(removedNonKoreanEnglishNumber);
+  }
+
+  void _filterBlocksByKOREAN_JOSA_LIST() {
+    const Set<String> KOREAN_JOSA_LIST = {
+      "를",
+      "여",
+      "의",
+      "는",
+      "은",
+      "뿐",
+      "에",
+      "이",
+      "께",
+      "만",
+      "보다",
+      "하고",
+      "부터",
+      "이야",
+      "이나",
+      "나마",
+      "시면",
+      "으로",
+      "에서",
+      "에게",
+      "이여",
+      "로써",
+      "라고",
+      "이랑",
+      "대로",
+      "수가",
+      "마다",
+      "까지",
+      "조차",
+      "말로",
+      "든지",
+      "던지",
+    };
+
+    bool _isJOSAIncluded(String word) => KOREAN_JOSA_LIST
+        .map((josa) => word.endsWith(josa))
+        .any((isJosaIncluded) => isJosaIncluded == true);
+
+    final filteredByJOSA = menuBlockList.filter(
+      (block, i) {
+        final wordList = block.text.split(" ");
+
+        final isJOSAIncluded = wordList
+            .map(
+              (word) => _isJOSAIncluded(word),
+            )
+            .any(
+              (isJOSAIncluded) => isJOSAIncluded == true,
+            );
+
+        return isJOSAIncluded == false;
+      },
+    );
+
+    _updateMenuBlockList(filteredByJOSA);
   }
 }

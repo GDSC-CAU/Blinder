@@ -1,46 +1,50 @@
-import 'package:app/core/menu_rect_block.dart';
-import 'package:app/core/statics.dart';
+import 'package:app/core/block/menu_block.dart';
+import 'package:app/core/utils/sort.dart';
+import 'package:app/core/utils/statics.dart';
 import 'package:app/models/food_menu.dart';
 import 'package:app/models/model_factory.dart';
 import 'package:app/utils/array.dart';
-import 'package:app/utils/sort.dart';
 import 'package:app/utils/text.dart';
 
-typedef MenuRectBlockList = List<MenuRectBlock>;
+typedef MenuBlockList = List<MenuBlock>;
 typedef CategoryFilterFunction = bool Function(String category);
 
 class MenuParser {
   /// **Inject ML category `NL` model function**
   final CategoryFilterFunction categoryFilterFunction;
-  MenuRectBlockList menuRectBlockList = [];
+  MenuBlockList parserMenuBlockList = [];
+
+  // ignore: use_setters_to_change_properties
+  void updateParserMenuRectBlockList(MenuBlockList newMenuRectBlockList) {
+    parserMenuBlockList = newMenuRectBlockList;
+  }
 
   MenuParser({
     required this.categoryFilterFunction,
   });
 
-  MenuRectBlockList _filterSelf(MenuRectBlock targetBlock) =>
-      menuRectBlockList.filter(
+  MenuBlockList _filterSelf(MenuBlock targetBlock) =>
+      parserMenuBlockList.filter(
         (block, i) =>
-            block.textRectBlock.tl != targetBlock.textRectBlock.tl ||
+            block.block.tl != targetBlock.block.tl ||
             block.text != targetBlock.text,
       );
 
-  MenuRectBlockList _searchAxisByY(
-    MenuRectBlock targetBlock, {
+  MenuBlockList _searchAxisByY(
+    MenuBlock targetBlock, {
     required int tolerance,
   }) {
-    final targetList = _filterSelf(targetBlock).fold<MenuRectBlockList>(
+    final targetList = _filterSelf(targetBlock).fold<MenuBlockList>(
       [],
       (ySimilar, block) {
-        if ((targetBlock.textRectBlock.tl.y - block.textRectBlock.tl.y).abs() <=
-            tolerance) {
+        if ((targetBlock.block.tl.y - block.block.tl.y).abs() <= tolerance) {
           ySimilar.add(block);
         }
         return ySimilar;
       },
     );
     targetList.sort(
-      (a, b) => ascendingSort(a.textRectBlock.tl.x, b.textRectBlock.tl.x),
+      (a, b) => ascendingSort(a.block.tl.x, b.block.tl.x),
     );
 
     return targetList;
@@ -56,16 +60,15 @@ class MenuParser {
   ///TODO: alignment 조건 달기
   List<FoodMenu> getAllFoodMenu() {
     final menuList =
-        menuRectBlockList.fold<List<FoodMenu>>([], (filteredMenuList, block) {
+        parserMenuBlockList.fold<List<FoodMenu>>([], (filteredMenuList, block) {
       if (isPriceText(block.text)) return filteredMenuList;
 
       final searchedByCurrentY = _searchAxisByY(
         block,
-        tolerance: block.textRectBlock.height,
+        tolerance: block.block.height,
       );
       final rightSideOfCurrentX = searchedByCurrentY
-          .where((element) =>
-              element.textRectBlock.tl.x > block.textRectBlock.tl.x)
+          .where((element) => element.block.tl.x > block.block.tl.x)
           .toList();
 
       if (rightSideOfCurrentX.isEmpty) return filteredMenuList;
@@ -96,17 +99,16 @@ class MenuParser {
     return filteredMenuListByML;
   }
 
-  MenuRectBlockList getCategory() {
+  MenuBlockList getCategory() {
     final heightArray =
-        menuRectBlockList.map((block) => block.textRectBlock.height).toList();
+        parserMenuBlockList.map((block) => block.block.height).toList();
     heightArray.sort();
     final heightAvg = Statics.avg(heightArray);
 
-    final categoryTextBlocksByHeight =
-        menuRectBlockList.fold<MenuRectBlockList>(
+    final categoryTextBlocksByHeight = parserMenuBlockList.fold<MenuBlockList>(
       [],
       (filtered, block) {
-        if (block.textRectBlock.height > heightAvg) {
+        if (block.block.height > heightAvg) {
           filtered.add(block);
           return filtered;
         }
@@ -115,17 +117,16 @@ class MenuParser {
     );
 
     ///TODO: 일단 제외 / align condition 추가
-    final categoryTextBlocksByMoneyCondition = categoryTextBlocksByHeight
-        .fold<MenuRectBlockList>([], (filtered, block) {
+    final categoryTextBlocksByMoneyCondition =
+        categoryTextBlocksByHeight.fold<MenuBlockList>([], (filtered, block) {
       if (isPriceText(block.text)) return filtered;
 
       final searchedByCurrentY = _searchAxisByY(
         block,
-        tolerance: block.textRectBlock.height ~/ 2,
+        tolerance: block.block.height ~/ 2,
       );
       final rightSideOfCurrentX = searchedByCurrentY
-          .where((element) =>
-              element.textRectBlock.tl.x > block.textRectBlock.tl.x)
+          .where((element) => element.block.tl.x > block.block.tl.x)
           .toList();
 
       if (rightSideOfCurrentX.isEmpty) {
@@ -135,9 +136,9 @@ class MenuParser {
 
       if (rightSideOfCurrentX.any((block) => isPriceText(block.text))) {
         final heightList =
-            rightSideOfCurrentX.map((e) => e.textRectBlock.height).toList();
+            rightSideOfCurrentX.map((e) => e.block.height).toList();
 
-        if (block.textRectBlock.height >
+        if (block.block.height >
             Statics.avg(heightList) + Statics.std(heightList)) {
           filtered.add(block);
           return filtered;
@@ -151,7 +152,7 @@ class MenuParser {
     });
 
     final filteredCategoryTextBlocksByML =
-        categoryTextBlocksByMoneyCondition.fold<MenuRectBlockList>(
+        categoryTextBlocksByMoneyCondition.fold<MenuBlockList>(
       [],
       (filteredByML, categoryBlock) {
         if (categoryFilterFunction(categoryBlock.text)) {
