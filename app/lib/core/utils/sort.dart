@@ -1,4 +1,4 @@
-int ascendingSort(int a, int b) {
+int ascendingSort(num a, num b) {
   if (a < b) {
     return -1;
   } else if (a > b) {
