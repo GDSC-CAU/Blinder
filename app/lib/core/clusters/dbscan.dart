@@ -78,11 +78,10 @@ class DBSCAN<T extends Point> {
   bool _isTargetCoordInCenterRectBoundary({
     required Point targetCoord,
     required Point centerCoord,
-    required int rectSize,
   }) {
     final coordDiff = centerCoord - targetCoord;
-    final isInBoundary =
-        coordDiff.x.abs() <= rectSize / 2 && coordDiff.y.abs() <= rectSize / 2;
+    final isInBoundary = coordDiff.x.abs() <= scanRectSize / 2 &&
+        coordDiff.y.abs() <= scanRectSize / 2;
     return isInBoundary;
   }
 
@@ -91,7 +90,7 @@ class DBSCAN<T extends Point> {
         _centerPointList.folder<DensityRectSectionList<T>>(
       [],
       (clusteredSections, currPoint, pointI, tot) {
-        final borderPointIndexList = tot.folder<Set<int>>(
+        final Set<int> borderPointIndexList = tot.folder<Set<int>>(
           <int>{},
           (borderPoints, targetCoord, distI, tot) {
             final isSelf = pointI == distI;
@@ -100,7 +99,6 @@ class DBSCAN<T extends Point> {
             if (_isTargetCoordInCenterRectBoundary(
               targetCoord: targetCoord,
               centerCoord: currPoint,
-              rectSize: scanRectSize,
             )) {
               borderPoints.add(distI);
               return borderPoints;
@@ -111,7 +109,7 @@ class DBSCAN<T extends Point> {
         );
 
         final isCorePoint =
-            borderPointIndexList.length > numberOfCorePointCondition;
+            borderPointIndexList.length >= numberOfCorePointCondition;
         if (isCorePoint) {
           clusteredSections.add(
             DensityRectSection(
