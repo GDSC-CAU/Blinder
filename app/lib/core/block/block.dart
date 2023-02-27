@@ -2,16 +2,16 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-class Coord extends Point<int> {
+class Coord extends Point<num> {
   Coord({
-    required int x,
-    required int y,
+    required num x,
+    required num y,
   }) : super(x, y);
 
   factory Coord.translate(
     Coord targetCoord, {
-    required int xAmount,
-    required int yAmount,
+    required num xAmount,
+    required num yAmount,
   }) =>
       Coord(
         x: targetCoord.x + xAmount,
@@ -62,7 +62,7 @@ class RectPosition {
       );
 }
 
-class TextRectBlock {
+class Block {
   final RectPosition initialPosition;
 
   Rect get boundingBox => Rect.fromLTRB(
@@ -86,9 +86,9 @@ class TextRectBlock {
 
   final RectPosition position;
 
-  TextRectBlock({
+  Block({
     required this.initialPosition,
-  }) : position = normalize(
+  }) : position = mean(
           RectPosition(
             tl: initialPosition.tl,
             tr: initialPosition.tr,
@@ -97,8 +97,8 @@ class TextRectBlock {
           ),
         );
 
-  static RectPosition normalize(RectPosition targetPosition) {
-    final normalizedPosition = RectPosition(
+  static RectPosition mean(RectPosition targetPosition) {
+    final meanPosition = RectPosition(
       tl: Coord(
         x: (targetPosition.tl.x + targetPosition.bl.x) ~/ 2,
         y: (targetPosition.tl.y + targetPosition.tr.y) ~/ 2,
@@ -117,7 +117,7 @@ class TextRectBlock {
       ),
     );
 
-    return normalizedPosition;
+    return meanPosition;
   }
 
   @override
