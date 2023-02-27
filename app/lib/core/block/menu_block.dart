@@ -1,23 +1,23 @@
-import 'package:app/core/text_rect_block.dart';
+import 'package:app/core/block/block.dart';
 import 'package:app/utils/text.dart';
 
-class MenuRectBlock {
+class MenuBlock {
   String text;
-  TextRectBlock textRectBlock;
+  Block block;
 
-  MenuRectBlock({
+  MenuBlock({
     required this.text,
-    required this.textRectBlock,
+    required this.block,
   });
 
   /// Check combinable state based on box coordinates
   ///
   /// `toleranceX` - avg height of blocks
   ///
-  /// `toleranceY` - avg height / 2 of blocks
+  /// `toleranceY` - avg height / `2` of blocks
   static bool getCombinableState(
-    MenuRectBlock target,
-    MenuRectBlock combineTarget, {
+    MenuBlock target,
+    MenuBlock combineTarget, {
     required int toleranceX,
     required int toleranceY,
   }) {
@@ -28,8 +28,8 @@ class MenuRectBlock {
       return false;
     }
 
-    final targetA = target.textRectBlock;
-    final targetB = combineTarget.textRectBlock;
+    final targetA = target.block;
+    final targetB = combineTarget.block;
     final isTargetLocationIsLeft = targetA.center.x <= targetB.center.x;
 
     final distanceX = isTargetLocationIsLeft
@@ -59,19 +59,19 @@ class MenuRectBlock {
   ///   );
   ///}
   /// ```
-  factory MenuRectBlock.combine(
-    MenuRectBlock target,
-    MenuRectBlock combineTarget,
+  factory MenuBlock.combine(
+    MenuBlock target,
+    MenuBlock combineTarget,
   ) {
-    final targetA = target.textRectBlock;
-    final targetB = combineTarget.textRectBlock;
+    final targetA = target.block;
+    final targetB = combineTarget.block;
     final isTargetALeft = targetA.center.x <= targetB.center.x;
 
-    return MenuRectBlock(
+    return MenuBlock(
       text: isTargetALeft
           ? "${target.text} ${combineTarget.text}"
           : "${combineTarget.text} ${target.text}",
-      textRectBlock: TextRectBlock(
+      block: Block(
         initialPosition: isTargetALeft
             ? RectPosition(
                 tl: targetA.tl,
@@ -91,6 +91,6 @@ class MenuRectBlock {
 
   @override
   String toString() {
-    return "\n{ \n   text: $text, \n   textRectBlock: $textRectBlock }";
+    return "\n{ \n   text: $text, \n   textRectBlock: $block }";
   }
 }
