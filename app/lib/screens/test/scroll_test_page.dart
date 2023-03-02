@@ -50,7 +50,7 @@ class ScrollTestPage extends StatelessWidget {
               itemBuilder: (context, index) {
                 final menu = menus[index];
                 return MenuButton(
-                  text: "${menu.name} ${formatMoney(menu.price)}",
+                  text: "${menu.name} ${menu.price}",
                   onPressed: () {},
                 );
               },
