@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:app/core/block/block.dart';
+import 'package:app/core/clusters/cluster.interface.dart';
 import 'package:app/utils/array.dart';
 
 class DensityRectSection<T extends Point> {
@@ -18,35 +20,41 @@ class DensityRectSection<T extends Point> {
       "\n{ \n    core: $corePoint, \n    borderIndex: $borderPointIndexList \n}";
 }
 
-typedef IndexList = List<int>;
 typedef DensityRectSectionList<T extends Point> = List<DensityRectSection<T>>;
 
-class DBSCAN<T extends Point> {
+class DBSCAN<T extends Coord> implements Cluster<T> {
   /// Square scan section area
   final int scanRectSize;
 
   /// Condition of core point
   final int numberOfCorePointCondition;
-  final List<T> _centerPointList;
+
   final DensityRectSectionList<T> densityRectSections = [];
 
+  /// List of `Coord`
+  @override
+  final List<T> clusterTarget;
+
+  @override
+  void updateClusterTarget(List<T> newClusterTarget) {
+    clusterTarget.clear();
+    clusterTarget.addAll(newClusterTarget);
+  }
+
   /// List of index list of each clustered section
-  List<IndexList> get clusteredDensitySectionIndexList =>
-      densityRectSections.map<IndexList>(
+  @override
+  List<IndexList> get clusteredIndexList => densityRectSections.map<IndexList>(
         (section) {
           final totIndexSet = <int>{};
           totIndexSet.addAll(section.borderPointIndexList);
           totIndexSet.add(section.corePointIndex);
-
-          final totIndexList = totIndexSet.toList();
-          totIndexList.sort();
-          return totIndexList;
+          return totIndexSet.toList();
         },
       ).toList();
 
   /// Index list of noise points
   IndexList get noisePointIndexList {
-    final totalClusteredIndexList = clusteredDensitySectionIndexList.fold(
+    final totalClusteredIndexList = clusteredIndexList.fold(
       <int>{},
       (totSectionIndexList, sectionIndexList) {
         totSectionIndexList.addAll(sectionIndexList);
@@ -54,7 +62,7 @@ class DBSCAN<T extends Point> {
       },
     );
     return List.generate(
-      _centerPointList.length,
+      clusterTarget.length,
       (index) => index,
     ).filter(
       (index, i) => totalClusteredIndexList.contains(index) == false,
@@ -62,10 +70,10 @@ class DBSCAN<T extends Point> {
   }
 
   DBSCAN({
-    required List<T> centerPointList,
+    required this.clusterTarget,
     required this.scanRectSize,
-    this.numberOfCorePointCondition = 3,
-  }) : _centerPointList = centerPointList;
+    required this.numberOfCorePointCondition,
+  });
 
   void _updateDensityRectSections(
     DensityRectSectionList<T> newSections, {
@@ -87,7 +95,7 @@ class DBSCAN<T extends Point> {
 
   void _divideSectionByDensity() {
     final clusteredSectionList =
-        _centerPointList.folder<DensityRectSectionList<T>>(
+        clusterTarget.folder<DensityRectSectionList<T>>(
       [],
       (clusteredSections, currPoint, pointI, tot) {
         final Set<int> borderPointIndexList = tot.folder<Set<int>>(
@@ -183,7 +191,7 @@ class DBSCAN<T extends Point> {
                         corePoint: latestMergedSection.corePoint,
                         borderPoints: latestMergedSection.borderPointIndexList
                             .map(
-                              (e) => _centerPointList[e],
+                              (e) => clusterTarget[e],
                             )
                             .toList(),
                       ) <
@@ -191,7 +199,7 @@ class DBSCAN<T extends Point> {
                         corePoint: section.corePoint,
                         borderPoints: section.borderPointIndexList
                             .map(
-                              (e) => _centerPointList[e],
+                              (e) => clusterTarget[e],
                             )
                             .toList(),
                       );
@@ -251,6 +259,7 @@ class DBSCAN<T extends Point> {
   }
 
   /// Cluster data by given `scanRectSize`
+  @override
   void cluster() {
     _divideSectionByDensity();
     _mergeDensityRectSections();
