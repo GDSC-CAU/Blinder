@@ -1,44 +1,19 @@
 import 'dart:math';
 
 import 'package:app/core/block/block.dart';
-import 'package:app/core/utils/sort.dart';
+import 'package:app/core/clusters/cluster.interface.dart';
+import 'package:app/core/utils/math.dart';
 import 'package:app/core/utils/statics.dart';
 import 'package:app/utils/array.dart';
-
-typedef IndexList = List<int>;
 
 class LineAlignmentSegment {
   final Set<int> alignedIndexList;
   final LineAlignedDirection alignedDirection;
 
-  static int getDiffOfMinMax(List<num> numbers) {
-    final minFirstMaxLast = numbers.fold<List<num>>(
-      [],
-      (previousValue, element) {
-        previousValue.first = min(element, previousValue.first);
-        previousValue.last = max(element, previousValue.last);
-        return previousValue;
-      },
-    );
-    return (minFirstMaxLast.last - minFirstMaxLast.first).toInt();
-  }
-
   LineAlignmentSegment({
     required this.alignedIndexList,
     required this.alignedDirection,
   });
-}
-
-class AbstractedLine {
-  final List<Coord> coordList;
-
-  AbstractedLine({
-    required this.coordList,
-  }) {
-    coordList.sort(
-      (a, b) => ascendingSort(a.y, b.y),
-    );
-  }
 }
 
 /// Aligned Direction of line
@@ -50,9 +25,9 @@ enum LineAlignedDirection {
   right,
 }
 
-class LineAlignment {
+class LineAlignment implements Cluster<Block> {
   /// Maximum gap of two `points`
-  final int maximumPointGap;
+  final int? maximumPointGap;
 
   /// Maximum `Angle(Degree)` with `y` axis at `point` to `point` line
   final int maximumAngleOfYAxis;
@@ -60,38 +35,90 @@ class LineAlignment {
   /// Minimum number of point number of **_clustered line composition_**
   final int minimumPointOfLine;
 
-  final List<Block> _blockList;
+  @override
+  void updateClusterTarget(List<Block> newClusterTarget) {
+    clusterTarget.clear();
+    clusterTarget.addAll(newClusterTarget);
+  }
+
+  /// List of `Block`
+  @override
+  final List<Block> clusterTarget;
 
   /// **Clustered result** of line segments
   ///
   /// - Returns **`[[<left>], [<center>], [<right>]]`**
-  ///
-  /// - Deduplicated
   final List<List<LineAlignmentSegment>> lineAlignmentSegments = [];
 
-  List<Coord> get _leftCoordList => _blockList.map((e) => e.tl).toList();
-  List<Coord> get _centerCoordList => _blockList.map((e) => e.center).toList();
-  List<Coord> get _rightCoordList => _blockList.map((e) => e.tr).toList();
+  /// **Clustered result** of line segments
+  ///
+  /// - Pick one of **`[[<left>], [<center>], [<right>]]`**
+  /// - Get largest set of them
+  List<LineAlignmentSegment> get lineAlignmentSegment {
+    final countOfClusteredIndex = lineAlignmentSegments.fold<List<int>>(
+      [],
+      (countList, segments) {
+        if (segments.isEmpty) {
+          countList.add(0);
+          return countList;
+        }
+        final clusteredCount = segments
+            .map(
+              (segment) => segment.alignedIndexList.length,
+            )
+            .reduce(
+              (totIndexCount, indexListLength) =>
+                  totIndexCount + indexListLength,
+            );
+        countList.add(clusteredCount);
+        return countList;
+      },
+    );
+    final maxAlignedIndex = Math.findMaxIndexList(countOfClusteredIndex);
+    if (maxAlignedIndex.length == 1) {
+      return lineAlignmentSegments[maxAlignedIndex.first];
+    }
 
-  List<IndexList> get lineAlignmentSegmentsIndexList => lineAlignmentSegments
+    final countOfClusteredSection = lineAlignmentSegments
+        .map(
+          (segments) => segments.length,
+        )
+        .toList();
+    final maxSectionIndex = Math.findMaxIndex(countOfClusteredSection);
+
+    return lineAlignmentSegments[maxSectionIndex];
+  }
+
+  List<Coord> get _leftCoordList => clusterTarget.map((e) => e.tl).toList();
+  List<Coord> get _centerCoordList =>
+      clusterTarget.map((e) => e.center).toList();
+  List<Coord> get _rightCoordList => clusterTarget.map((e) => e.tr).toList();
+
+  List<IndexList> get allClusteredIndexList => lineAlignmentSegments
       .map(
         (e) => e.fold<IndexList>(
           [],
-          (previousValue, element) {
-            previousValue.addAll(element.alignedIndexList);
-            previousValue.sort();
-            return previousValue;
+          (lineAlignedIndexList, segment) {
+            lineAlignedIndexList.addAll(segment.alignedIndexList);
+            return lineAlignedIndexList;
           },
         ),
       )
       .toList();
 
+  @override
+  List<IndexList> get clusteredIndexList => lineAlignmentSegment
+      .map(
+        (e) => e.alignedIndexList.toList(),
+      )
+      .toList();
+
   LineAlignment({
-    required List<Block> blockList,
-    required this.maximumPointGap,
+    required this.clusterTarget,
     required this.maximumAngleOfYAxis,
     required this.minimumPointOfLine,
-  }) : _blockList = blockList;
+    this.maximumPointGap,
+  });
 
   void _updateLineAlignmentSegments(
     List<LineAlignmentSegment> newSegments, {
@@ -142,9 +169,6 @@ class LineAlignment {
     required Coord second,
   }) {
     final distance = first.distanceTo(second);
-    if (distance > maximumPointGap) {
-      return false;
-    }
 
     const radToDegree = 360 / (2 * pi);
 
@@ -188,15 +212,21 @@ class LineAlignment {
 
             final latestClustered = clusteredIterations.last;
             final isEachPointAlignedByDegreeCondition =
-                latestClustered.alignedIndexList
-                    .map((i) => tot[i])
-                    .map(
-                      (lineCoord) => _isTwoPointAligned(
-                        first: lineCoord,
-                        second: iterCoord,
-                      ),
-                    )
-                    .any((isAligned) => isAligned == true);
+                latestClustered.alignedIndexList.map((index) => tot[index]).map(
+              (lineCoord) {
+                final isTwoPointAligned = _isTwoPointAligned(
+                  first: lineCoord,
+                  second: iterCoord,
+                );
+
+                final fullCheckyInYDirection = maximumPointGap == null;
+                if (fullCheckyInYDirection) {
+                  return isTwoPointAligned;
+                }
+                return isTwoPointAligned &&
+                    lineCoord.distanceTo(iterCoord).toInt() <= maximumPointGap!;
+              },
+            ).any((isAligned) => isAligned);
 
             if (isEachPointAlignedByDegreeCondition == false) {
               return clusteredIterations;
@@ -248,40 +278,29 @@ class LineAlignment {
   }
 
   /// Cluster data
-  void cluster() {
+  ///
+  /// `maximumAngleOfYAxis` - Maximum `Angle(Degree)` with `y` axis at `point` to `point` line
+  ///
+  /// Search until all price is being placed
+  @override
+  void cluster({
+    int? maximumAngleOfYAxis,
+    int? maximumPointGap,
+  }) {
+    maximumPointGap = maximumPointGap;
+    maximumAngleOfYAxis = maximumAngleOfYAxis;
+
     final iterCoordsList = [
       _leftCoordList,
       _centerCoordList,
       _rightCoordList,
     ];
 
-    final alreadyClusteredIndexList = <int>{};
-
     for (var i = 0; i < iterCoordsList.length; i++) {
-      final coordListToIter = iterCoordsList[i].filter(
-        (current, i) => alreadyClusteredIndexList.contains(i) == false,
-      );
-
       _clusterCoordsIntoLines(
-        coordList: coordListToIter,
+        coordList: iterCoordsList[i],
         alignedDirection: LineAlignedDirection.values[i],
       );
-
-      final clusteredIndexList = lineAlignmentSegments.fold(<int>{}, (
-        indexList,
-        currCluster,
-      ) {
-        final currClustersIndex = currCluster.fold(
-          <int>{},
-          (indexList, element) {
-            indexList.addAll(element.alignedIndexList);
-            return indexList;
-          },
-        );
-        indexList.addAll(currClustersIndex);
-        return indexList;
-      });
-      alreadyClusteredIndexList.addAll(clusteredIndexList);
     }
   }
 }
