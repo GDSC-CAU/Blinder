@@ -2,34 +2,31 @@
 
 import 'package:app/core/block/block.dart';
 import 'package:app/core/block/menu_block.dart';
-import 'package:app/core/menu_parser.dart';
+import 'package:app/core/clusters/clustering_engine.dart';
 import 'package:app/core/utils/sort.dart';
 import 'package:app/core/utils/statics.dart';
 import 'package:app/models/food_menu.dart';
+import 'package:app/models/model_factory.dart';
 import 'package:app/utils/array.dart';
 import 'package:app/utils/text.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
+typedef MenuBlockList = List<MenuBlock>;
+
 class MenuEngine {
-  final CategoryFilterFunction categoryFilterFunction;
   final TextRecognizer _textRecognizer;
-  final MenuParser _parser;
+  late final ClusteringEngine clusteringEngine;
 
   MenuBlockList menuBlockList = [];
 
-  MenuBlockList get category => _parser.getCategory();
-  List<FoodMenu> get foodMenu => _parser.getAllFoodMenu();
+  List<FoodMenu> get foodMenu => getAllFoodMenu();
 
-  MenuEngine({
-    required this.categoryFilterFunction,
-  })  : _textRecognizer = GoogleMlKit.vision.textRecognizer(
+  MenuEngine()
+      : _textRecognizer = GoogleMlKit.vision.textRecognizer(
           script: TextRecognitionScript.korean,
-        ),
-        _parser = MenuParser(
-          categoryFilterFunction: categoryFilterFunction,
         );
 
-  Future<void> _initializeParserFromImage(
+  Future<void> _initializeParser(
     InputImage image,
   ) async {
     final recognizedText = await _textRecognizer.processImage(image);
@@ -39,7 +36,7 @@ class MenuEngine {
       recognizedText,
     );
     _setupBlockList();
-    _parser.updateParserMenuRectBlockList(menuBlockList);
+    _initializeClusteringEngine();
   }
 
   /// Parse food menu
@@ -49,7 +46,7 @@ class MenuEngine {
     if (menuBlockList.isNotEmpty) {
       menuBlockList = [];
     }
-    await _initializeParserFromImage(image);
+    await _initializeParser(image);
   }
 
   MenuBlockList _getMenuRectBlockListByRecognizedText(
@@ -97,9 +94,7 @@ class MenuEngine {
     _normalizeBlockList();
     _filterBlockByHeightDistribution();
     _sortBlockListByCoordYX();
-    _combineBlockListBySearchRange(
-      toleranceXRatio: 2,
-    );
+    _combineBlockList();
     _filterBlocksByKOREAN_JOSA_LIST();
     _removeInvalidCharacters();
   }
@@ -208,161 +203,94 @@ class MenuEngine {
     _updateMenuBlockList(normalizedMenuRectBlockList);
   }
 
-  void _combineBlockListBySearchRange({
-    int searchRange = 3,
-    double toleranceXRatio = 1.5,
-    double toleranceYRatio = 0.5,
+  void _combineBlockList({
+    double scaleRatioOfSearchWidth = 2,
+    double scaleRatioOfSearchHeight = 0.75,
   }) {
-    MenuBlock _getCombinedBlockByRange({
-      required MenuBlockList list,
-      required int listHeightAvg,
-      required int beforeRange,
-      required int afterRange,
-      required int currIndex,
-    }) {
-      final self = list[currIndex];
-
-      final beforeRangeList =
-          list.getRange(currIndex - beforeRange, currIndex).toList();
-      final afterRangeList =
-          list.getRange(currIndex + 1, afterRange + (currIndex + 1)).toList();
-      final testRange = [...beforeRangeList, ...afterRangeList];
-
-      final combinedBlock = testRange.folder<MenuBlockList>(
-        [self],
-        (combined, currBlock, i, tot) {
-          if (MenuBlock.getCombinableState(
-            combined.last,
-            currBlock,
-            toleranceX: (listHeightAvg * toleranceXRatio).toInt(),
-            toleranceY: (listHeightAvg * toleranceYRatio).toInt(),
-          )) {
-            final combinedBlock = MenuBlock.combine(
-              combined.last,
-              currBlock,
-            );
-            combined.add(combinedBlock);
-            return combined;
-          }
-
-          return combined;
-        },
-      ).last;
-
-      return combinedBlock;
-    }
-
-    bool _isNameDuplicated(
-      String newTarget,
-      String origin,
-    ) =>
-        newTarget.contains(origin);
-
-    bool _isSelfDuplicated(
-      MenuBlock blockSelf,
-      MenuBlockList blockList,
-    ) {
-      final textList = blockList.map((e) => e.text);
-      final shouldRemoveSelf = textList.fold<List<bool>>(
-        [],
-        (acc, curr) {
-          acc.add(_isNameDuplicated(curr, blockSelf.text));
-          return acc;
-        },
-      ).any((element) => element == true);
-
-      return shouldRemoveSelf;
-    }
-
-    MenuBlockList _getDeduplicatedBlock({
-      required MenuBlock targetBlock,
-      required MenuBlockList totBlock,
-    }) {
-      final List<int> duplicatedIndexList = totBlock.folder(
-        [],
-        (acc, curr, i, _) {
-          if (_isNameDuplicated(targetBlock.text, curr.text)) {
-            acc.add(i);
-            return acc;
-          }
-          return acc;
-        },
-      );
-
-      return totBlock.filter(
-        (current, i) => duplicatedIndexList.contains(i) == false,
-      );
-    }
-
-    Map<String, int> _getRangeByCurrentIndex({
-      required int currentIndex,
-      required int givenRange,
-      required int totLength,
-    }) {
-      if (currentIndex - searchRange < 0) {
-        return {
-          "before": currentIndex,
-          "after": givenRange,
-        };
-      }
-      if (searchRange + (currentIndex + 1) > totLength) {
-        return {
-          "before": givenRange,
-          "after": totLength - (currentIndex + 1),
-        };
-      }
-      return {
-        "before": givenRange,
-        "after": givenRange,
-      };
-    }
-
-    final combinedBlockList = menuBlockList.folder<MenuBlockList>(
-      [],
-      (combinedList, currBlock, i, _) {
-        if (i == 0) {
-          combinedList.add(currBlock);
-          return combinedList;
-        }
-
-        if (isPriceText(currBlock.text)) {
-          combinedList.add(currBlock);
-          return combinedList;
-        }
-        final calculatedRange = _getRangeByCurrentIndex(
-          currentIndex: i,
-          givenRange: searchRange,
-          totLength: menuBlockList.length,
-        );
-
-        final combinedBlock = _getCombinedBlockByRange(
-          currIndex: i,
-          list: menuBlockList,
-          listHeightAvg: Statics.avg(
-            menuBlockList
-                .map(
-                  (e) => e.block.height,
-                )
-                .toList(),
-          ).toInt(),
-          beforeRange: calculatedRange["before"]!,
-          afterRange: calculatedRange["after"]!,
-        );
-
-        combinedList = _getDeduplicatedBlock(
-          targetBlock: combinedBlock,
-          totBlock: combinedList,
-        );
-
-        if (_isSelfDuplicated(combinedBlock, combinedList)) {
-          return combinedList;
-        }
-
-        combinedList.add(combinedBlock);
-        return combinedList;
-      },
+    final heightAvg = Statics.avg(
+      menuBlockList.map((e) => e.block.height).toList(),
     );
+    final toleranceX = (heightAvg * scaleRatioOfSearchWidth).toInt();
+    final toleranceY = (heightAvg * scaleRatioOfSearchHeight).toInt();
 
+    MenuBlockList combineBlockListUntilEnd(
+      MenuBlockList combineTargetBlockList,
+    ) {
+      final Set<int> _mergedIndex = {};
+
+      final mergedBlockList = combineTargetBlockList.folder<MenuBlockList>(
+        [],
+        (mergedBlocks, currentMenuBlock, currentI, tot) {
+          if (_mergedIndex.contains(currentI)) {
+            return mergedBlocks;
+          }
+
+          final combinedMenuBlock = tot.folder<MenuBlockList>(
+            [currentMenuBlock],
+            (combinedMenuBlock, iterBlock, iterI, _) {
+              if (currentI == iterI) {
+                return combinedMenuBlock;
+              }
+              if (_mergedIndex.contains(iterI)) {
+                return combinedMenuBlock;
+              }
+
+              if (MenuBlock.getCombinableState(
+                combinedMenuBlock.last,
+                iterBlock,
+                toleranceX: toleranceX,
+                toleranceY: toleranceY,
+              )) {
+                final combinedBlock = MenuBlock.combine(
+                  combinedMenuBlock.last,
+                  iterBlock,
+                );
+                combinedMenuBlock.add(combinedBlock);
+
+                _mergedIndex.add(iterI);
+
+                return combinedMenuBlock;
+              }
+
+              return combinedMenuBlock;
+            },
+          ).last;
+
+          mergedBlocks.add(combinedMenuBlock);
+          return mergedBlocks;
+        },
+      );
+
+      final checkedIndex = <int>{};
+
+      final isCombineNotCompleted = mergedBlockList
+          .mapper<bool>(
+            (currBlock, currI, _) => mergedBlockList.mapper<bool>(
+              (iterBlock, iterI, _) {
+                if (iterI == currI) return false;
+                if (checkedIndex.contains(iterI)) return false;
+
+                final isCombinePossible = MenuBlock.getCombinableState(
+                  currBlock,
+                  iterBlock,
+                  toleranceX: toleranceX,
+                  toleranceY: toleranceY,
+                );
+                checkedIndex.add(iterI);
+                return isCombinePossible;
+              },
+            ).any((isCombinePossible) => isCombinePossible),
+          )
+          .any((shouldCombineMore) => shouldCombineMore);
+
+      if (isCombineNotCompleted) {
+        return combineBlockListUntilEnd(mergedBlockList);
+      } else {
+        return mergedBlockList;
+      }
+    }
+
+    final combinedBlockList = combineBlockListUntilEnd(menuBlockList);
     _updateMenuBlockList(combinedBlockList);
   }
 
@@ -398,17 +326,28 @@ class MenuEngine {
     _updateMenuBlockList(filteredMenuBlockList);
   }
 
-  void _removeInvalidCharacters() {
-    String removeNonKoreanEnglishPriceNumber(String input) {
-      final RegExp nonKoreanEnglishPriceNumber =
-          RegExp(r'[^\uAC00-\uD7A3ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,.]');
-      return input.replaceAll(nonKoreanEnglishPriceNumber, '').trim();
-    }
+  String _removeNonKoreanEnglishPriceNumber(String text) {
+    const divider = "";
+    final RegExp nonKoreanEnglishPriceNumber =
+        RegExp(r'[^\uAC00-\uD7A3ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,.&]');
+    return text
+        .replaceAll(
+          nonKoreanEnglishPriceNumber,
+          divider,
+        )
+        .trim();
+  }
 
+  String _removeLastComma(String text) =>
+      text.endsWith(",") ? text.replaceAll(RegExp(','), "") : text;
+
+  void _removeInvalidCharacters() {
     final removedNonKoreanEnglishNumber = menuBlockList
         .map(
           (e) => MenuBlock(
-            text: removeNonKoreanEnglishPriceNumber(e.text),
+            text: _removeLastComma(
+              _removeNonKoreanEnglishPriceNumber(e.text),
+            ),
             block: e.block,
           ),
         )
@@ -419,60 +358,177 @@ class MenuEngine {
 
   void _filterBlocksByKOREAN_JOSA_LIST() {
     const Set<String> KOREAN_JOSA_LIST = {
+      "가",
+      "과",
+      "을",
       "를",
-      "여",
-      "의",
-      "는",
-      "은",
-      "뿐",
-      "에",
       "이",
+      "야",
+      "나",
+      "에",
+      "게",
       "께",
+      "아",
+      "로",
+      "여",
+      "와",
+      "고",
+      "의",
+      "랑",
+      "은",
+      "는",
+      "도",
       "만",
-      "보다",
-      "하고",
-      "부터",
-      "이야",
-      "이나",
-      "나마",
-      "시면",
+      "뿐",
+      "다",
+      "시",
+      "어",
+      "이다",
       "으로",
       "에서",
       "에게",
       "이여",
       "로써",
+      "보다",
       "라고",
+      "하고",
       "이랑",
       "대로",
       "수가",
+      "부터",
       "마다",
       "까지",
       "조차",
       "말로",
+      "이야",
+      "이나",
+      "나마",
+      "니다",
+      "시면",
       "든지",
       "던지",
+      "세요",
+      "해요",
+      "아요",
     };
 
-    bool _isJOSAIncluded(String word) => KOREAN_JOSA_LIST
+    const KOREAN_LIST_NUMBER = <String>{
+      "하나",
+      "둘",
+      "셋",
+    };
+
+    const KOREAN_PERSONAL_PRONOUNS = <String>{
+      "저희",
+    };
+
+    const KOREAN_FILTER = [
+      ...KOREAN_JOSA_LIST,
+      ...KOREAN_LIST_NUMBER,
+      ...KOREAN_PERSONAL_PRONOUNS
+    ];
+
+    bool _isJOSAIncluded(String word) => KOREAN_FILTER
         .map((josa) => word.endsWith(josa))
         .any((isJosaIncluded) => isJosaIncluded == true);
 
     final filteredByJOSA = menuBlockList.filter(
       (block, i) {
-        final wordList = block.text.split(" ");
+        const indent = " ";
+        final wordListByIndent = block.text
+            .split(indent)
+            .map((word) => _removeNonKoreanEnglishPriceNumber(word));
 
-        final isJOSAIncluded = wordList
-            .map(
-              (word) => _isJOSAIncluded(word),
-            )
-            .any(
-              (isJOSAIncluded) => isJOSAIncluded == true,
-            );
+        final isWordCouldBeSentence = wordListByIndent
+                .map((word) => _isJOSAIncluded(word))
+                .toList()
+                .filter((josa, _) => josa)
+                .length >=
+            2;
 
-        return isJOSAIncluded == false;
+        if (isWordCouldBeSentence) {
+          print("조사 필터링: ${block.text}");
+          return false;
+        }
+        return true;
       },
     );
 
     _updateMenuBlockList(filteredByJOSA);
+  }
+
+  void _initializeClusteringEngine() {
+    clusteringEngine = ClusteringEngine(
+      menuBlockList: menuBlockList,
+    );
+  }
+
+  MenuBlockList _filterSelf(MenuBlock targetBlock) => menuBlockList.filter(
+        (block, i) =>
+            block.block.tl != targetBlock.block.tl ||
+            block.text != targetBlock.text,
+      );
+
+  MenuBlockList _searchAxisByY(
+    MenuBlock targetBlock, {
+    required int tolerance,
+  }) {
+    final MenuBlockList targetList = _filterSelf(
+      targetBlock,
+    ).fold<MenuBlockList>(
+      [],
+      (ySimilar, block) {
+        if ((targetBlock.block.tl.y - block.block.tl.y).abs() <= tolerance) {
+          ySimilar.add(block);
+        }
+        return ySimilar;
+      },
+    );
+    targetList.sort(
+      (a, b) => ascendingSort(a.block.tl.x, b.block.tl.x),
+    );
+
+    return targetList;
+  }
+
+  FoodMenu _generateFoodMenu(JsonMap jsonMap) {
+    final foodMenu = ModelFactory(FoodMenu());
+    foodMenu.serialize(jsonMap);
+
+    return foodMenu.data!;
+  }
+
+  List<FoodMenu> getAllFoodMenu() {
+    final menuList = menuBlockList.fold<List<FoodMenu>>(
+      [],
+      (
+        filteredMenuList,
+        menuBlock,
+      ) {
+        if (isPriceText(menuBlock.text)) return filteredMenuList;
+
+        final searchedByCurrentY = _searchAxisByY(
+          menuBlock,
+          tolerance: (menuBlock.block.height).toInt(),
+        );
+        final rightSideOfCurrentX = searchedByCurrentY
+            .where((element) => element.block.tl.x > menuBlock.block.tl.x)
+            .toList();
+
+        if (rightSideOfCurrentX.isEmpty) return filteredMenuList;
+
+        final rightSide = rightSideOfCurrentX.first;
+        if (isPriceText(rightSide.text) == false) return filteredMenuList;
+
+        final foodMenu = _generateFoodMenu({
+          "name": menuBlock.text,
+          "price": rightSideOfCurrentX.first.text,
+        });
+
+        filteredMenuList.add(foodMenu);
+        return filteredMenuList;
+      },
+    );
+    return menuList;
   }
 }
