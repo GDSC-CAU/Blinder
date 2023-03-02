@@ -89,6 +89,18 @@ class MenuBlock {
     );
   }
 
+  static bool isSameMenuBlock(
+    MenuBlock menuBlockA,
+    MenuBlock menuBlockB,
+  ) {
+    if (menuBlockA.text != menuBlockB.text) return false;
+
+    final isGeometrySame = menuBlockA.block.tl == menuBlockB.block.tl &&
+        menuBlockA.block.width == menuBlockB.block.width &&
+        menuBlockA.block.height == menuBlockB.block.height;
+    return isGeometrySame;
+  }
+
   @override
   String toString() {
     return "\n{ \n   text: $text, \n   textRectBlock: $block }";
