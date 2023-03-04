@@ -37,6 +37,7 @@ class LineAlignment implements Cluster<Block> {
 
   @override
   void updateClusterTarget(List<Block> newClusterTarget) {
+    lineAlignmentSegments.clear();
     clusterTarget.clear();
     clusterTarget.addAll(newClusterTarget);
   }
@@ -70,6 +71,7 @@ class LineAlignment implements Cluster<Block> {
               (totIndexCount, indexListLength) =>
                   totIndexCount + indexListLength,
             );
+
         countList.add(clusteredCount);
         return countList;
       },
@@ -214,6 +216,7 @@ class LineAlignment implements Cluster<Block> {
             final isEachPointAlignedByDegreeCondition =
                 latestClustered.alignedIndexList.map((index) => tot[index]).map(
               (lineCoord) {
+                /// 점 중에 하나라도 isTwoPointAligned를 만족하면 cluster에 포함시킴
                 final isTwoPointAligned = _isTwoPointAligned(
                   first: lineCoord,
                   second: iterCoord,

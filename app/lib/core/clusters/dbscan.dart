@@ -37,6 +37,7 @@ class DBSCAN<T extends Coord> implements Cluster<T> {
 
   @override
   void updateClusterTarget(List<T> newClusterTarget) {
+    densityRectSections.clear();
     clusterTarget.clear();
     clusterTarget.addAll(newClusterTarget);
   }
@@ -244,9 +245,9 @@ class DBSCAN<T extends Coord> implements Cluster<T> {
 
       if (isMergeNotCompleted) {
         return mergeSectionsUntilDivided(mergedDensitySectionsByCorePoint);
-      } else {
-        return mergedDensitySectionsByCorePoint;
       }
+
+      return mergedDensitySectionsByCorePoint;
     }
 
     final mergedDensityRectSections =
