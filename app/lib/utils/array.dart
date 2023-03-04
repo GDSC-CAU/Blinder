@@ -51,3 +51,10 @@ extension Filter<T> on List<T> {
     return result;
   }
 }
+
+extension Flat<T> on List<T> {
+  List<R> flat<R>() => [
+        for (final sub in this)
+          if (sub is List) ...sub.flat() else sub as R,
+      ];
+}
