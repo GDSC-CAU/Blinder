@@ -20,12 +20,15 @@ class MenuBlock {
     MenuBlock combineTarget, {
     required int toleranceX,
     required int toleranceY,
+    bool skipPrice = true,
   }) {
     final isSelfConflict = target.text.contains(combineTarget.text);
     if (isSelfConflict) return false;
 
-    if (isPriceText(target.text) || isPriceText(combineTarget.text)) {
-      return false;
+    if (skipPrice) {
+      if (isPriceText(target.text) || isPriceText(combineTarget.text)) {
+        return false;
+      }
     }
 
     final targetA = target.block;
