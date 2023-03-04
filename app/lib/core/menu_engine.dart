@@ -3,6 +3,7 @@
 import 'package:app/core/block/block.dart';
 import 'package:app/core/block/menu_block.dart';
 import 'package:app/core/clusters/clustering_engine.dart';
+import 'package:app/core/utils/math.dart';
 import 'package:app/core/utils/sort.dart';
 import 'package:app/core/utils/statics.dart';
 import 'package:app/models/food_menu.dart';
@@ -13,18 +14,37 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 
 typedef MenuBlockList = List<MenuBlock>;
 
+enum ClusteringEngineStatus {
+  initialized,
+  waited,
+}
+
 class MenuEngine {
   final TextRecognizer _textRecognizer;
   late final ClusteringEngine clusteringEngine;
+  ClusteringEngineStatus clusteringEngineStatus = ClusteringEngineStatus.waited;
 
   MenuBlockList menuBlockList = [];
+  MenuBlockList _unMatchedNameBlockList = [];
+  MenuBlockList _unMatchedPriceBlockList = [];
 
-  List<FoodMenu> get foodMenu => getAllFoodMenu();
+  List<FoodMenu> _foodMenu = [];
+  List<FoodMenu> get foodMenu {
+    _matchAllFoodMenu();
+    return _foodMenu;
+  }
 
   MenuEngine()
       : _textRecognizer = GoogleMlKit.vision.textRecognizer(
           script: TextRecognitionScript.korean,
         );
+
+  void _clearPreviousResult() {
+    menuBlockList = [];
+    _foodMenu = [];
+    _unMatchedNameBlockList = [];
+    _unMatchedPriceBlockList = [];
+  }
 
   Future<void> _initializeParser(
     InputImage image,
@@ -36,16 +56,17 @@ class MenuEngine {
       recognizedText,
     );
     _setupBlockList();
-    _initializeClusteringEngine();
+
+    if (clusteringEngineStatus == ClusteringEngineStatus.waited) {
+      _initializeClusteringEngine();
+    }
   }
 
   /// Parse food menu
   Future<void> parse(
     InputImage image,
   ) async {
-    if (menuBlockList.isNotEmpty) {
-      menuBlockList = [];
-    }
+    _clearPreviousResult();
     await _initializeParser(image);
   }
 
@@ -135,13 +156,15 @@ class MenuEngine {
         final width = block.block.width;
         final height = block.block.height;
 
-        sorted.last = MenuBlock(
-          text: block.text,
-          block: Block(
-            initialPosition: RectPosition.fromBox(
-              centerCoordSortedByX,
-              width: width,
-              height: height,
+        sorted.add(
+          MenuBlock(
+            text: block.text,
+            block: Block(
+              initialPosition: RectPosition.fromBox(
+                centerCoordSortedByX,
+                width: width,
+                height: height,
+              ),
             ),
           ),
         );
@@ -204,7 +227,7 @@ class MenuEngine {
   }
 
   void _combineBlockList({
-    double scaleRatioOfSearchWidth = 2,
+    double scaleRatioOfSearchWidth = 2.25,
     double scaleRatioOfSearchHeight = 0.75,
   }) {
     final heightAvg = Statics.avg(
@@ -430,7 +453,7 @@ class MenuEngine {
 
     bool _isJOSAIncluded(String word) => KOREAN_FILTER
         .map((josa) => word.endsWith(josa))
-        .any((isJosaIncluded) => isJosaIncluded == true);
+        .any((isJosaIncluded) => isJosaIncluded);
 
     final filteredByJOSA = menuBlockList.filter(
       (block, i) {
@@ -439,14 +462,15 @@ class MenuEngine {
             .split(indent)
             .map((word) => _removeNonKoreanEnglishPriceNumber(word));
 
-        final isWordCouldBeSentence = wordListByIndent
+        const maximumCountOfJosa = 1;
+        final isSentence = wordListByIndent
                 .map((word) => _isJOSAIncluded(word))
                 .toList()
                 .filter((josa, _) => josa)
-                .length >=
-            2;
+                .length >
+            maximumCountOfJosa;
 
-        if (isWordCouldBeSentence) {
+        if (isSentence) {
           print("조사 필터링: ${block.text}");
           return false;
         }
@@ -460,75 +484,346 @@ class MenuEngine {
   void _initializeClusteringEngine() {
     clusteringEngine = ClusteringEngine(
       menuBlockList: menuBlockList,
+      maximumAngleOfYAxis: 5,
+      maximumPointGapRatio: 5,
+      minimumPointOfLine: 2,
     );
+    clusteringEngineStatus = ClusteringEngineStatus.initialized;
   }
 
-  MenuBlockList _filterSelf(MenuBlock targetBlock) => menuBlockList.filter(
-        (block, i) =>
-            block.block.tl != targetBlock.block.tl ||
-            block.text != targetBlock.text,
+  MenuBlockList _filterBlockList({
+    required MenuBlockList baseBlockList,
+    required MenuBlockList removeTargetBlockList,
+  }) =>
+      baseBlockList.filter(
+        (baseBlock, i) =>
+            removeTargetBlockList.any(
+              (removeTargetBlock) => MenuBlock.isSameMenuBlock(
+                removeTargetBlock,
+                baseBlock,
+              ),
+            ) ==
+            false,
       );
 
-  MenuBlockList _searchAxisByY(
-    MenuBlock targetBlock, {
-    required int tolerance,
+  MenuBlockList _filterOneBlock(
+    MenuBlockList totBlockList,
+    MenuBlock targetBlock,
+  ) =>
+      totBlockList.filter(
+        (block, _) =>
+            MenuBlock.isSameMenuBlock(
+              targetBlock,
+              block,
+            ) ==
+            false,
+      );
+
+  MenuBlockList _searchBlocksInYAxis({
+    required MenuBlockList searchTargetBlockList,
+    required MenuBlock standardBlock,
+    required int searchYHeight,
   }) {
-    final MenuBlockList targetList = _filterSelf(
-      targetBlock,
-    ).fold<MenuBlockList>(
+    final MenuBlockList searchedList =
+        searchTargetBlockList.folder<MenuBlockList>(
       [],
-      (ySimilar, block) {
-        if ((targetBlock.block.tl.y - block.block.tl.y).abs() <= tolerance) {
-          ySimilar.add(block);
+      (ySimilarBlockList, targetBlock, index, _) {
+        final isBlockInRange =
+            (standardBlock.block.tl.y - targetBlock.block.tl.y).abs() <=
+                searchYHeight;
+        if (isBlockInRange) {
+          ySimilarBlockList.add(targetBlock);
         }
-        return ySimilar;
+        return ySimilarBlockList;
       },
     );
-    targetList.sort(
-      (a, b) => ascendingSort(a.block.tl.x, b.block.tl.x),
-    );
 
-    return targetList;
+    return searchedList;
   }
 
-  FoodMenu _generateFoodMenu(JsonMap jsonMap) {
+  FoodMenu _createFoodMenu({
+    required String name,
+    required String price,
+  }) {
     final foodMenu = ModelFactory(FoodMenu());
-    foodMenu.serialize(jsonMap);
+    foodMenu.serialize({
+      "name": name,
+      "price": price,
+    });
 
     return foodMenu.data!;
   }
 
-  List<FoodMenu> getAllFoodMenu() {
-    final menuList = menuBlockList.fold<List<FoodMenu>>(
+  List<LineAlignCluster> _getLineAlignmentClusteredBlockList({
+    required List<MenuBlock> clusterTargetMenuBlock,
+  }) {
+    clusteringEngine.lineAlignmentClustering(
+      clusterTargetMenuBlock: clusterTargetMenuBlock,
+    );
+    final clusteredList = clusteringEngine.lineAlignmentClusters;
+    clusteredList.sort(
+      (a, b) => ascendingSort(a.middlePoint.x, b.middlePoint.x),
+    );
+
+    clusteringEngine.clearClusteredResult();
+
+    return clusteredList;
+  }
+
+  void _matchFoodMenuByAlignmentClustering() {
+    final nameBlockList = menuBlockList.filter(
+      (block, _) => isPriceText(block.text) == false,
+    );
+    final nameBlockClusterList = _getLineAlignmentClusteredBlockList(
+      clusterTargetMenuBlock: nameBlockList,
+    );
+
+    final priceBlockList = menuBlockList.filter(
+      (block, _) => isPriceText(block.text),
+    );
+    final priceAlignClusterList = _getLineAlignmentClusteredBlockList(
+      clusterTargetMenuBlock: priceBlockList,
+    );
+
+    List<num> _getLineClusterGapList(
+      List<LineAlignCluster> lineAlignmentClusterList,
+    ) {
+      return lineAlignmentClusterList.folder<List<num>>(
+        [],
+        (gapList, cluster, i, tot) {
+          if (i == 0) return gapList;
+          final prev = tot[i - 1];
+          final gapBetweenLine =
+              (cluster.middlePoint.x - prev.middlePoint.x).abs();
+
+          final isSameLine = gapBetweenLine <= clusteringEngine.blockWidthAvg;
+          if (isSameLine) {
+            return gapList;
+          }
+
+          gapList.add(gapBetweenLine);
+          return gapList;
+        },
+      );
+    }
+
+    final List<num> lineClusterGapList = [];
+    lineClusterGapList.addAll(_getLineClusterGapList(nameBlockClusterList));
+    lineClusterGapList.addAll(_getLineClusterGapList(priceAlignClusterList));
+
+    final lineClusterGapAvg = Statics.avg(lineClusterGapList);
+
+    final MenuBlockList matchedPriceList = [];
+    final MenuBlockList matchedNameList = [];
+
+    final menuList = nameBlockClusterList.folder<List<FoodMenu>>(
       [],
-      (
-        filteredMenuList,
-        menuBlock,
-      ) {
-        if (isPriceText(menuBlock.text)) return filteredMenuList;
-
-        final searchedByCurrentY = _searchAxisByY(
-          menuBlock,
-          tolerance: (menuBlock.block.height).toInt(),
+      (foodMenuList, nameCluster, targetI, tot) {
+        final targetPriceClusterList = priceAlignClusterList.filter(
+          (priceCluster, i) {
+            final gapXWithNameCluster =
+                priceCluster.middlePoint.x - nameCluster.middlePoint.x;
+            return gapXWithNameCluster > 0 &&
+                gapXWithNameCluster < lineClusterGapAvg;
+          },
         );
-        final rightSideOfCurrentX = searchedByCurrentY
-            .where((element) => element.block.tl.x > menuBlock.block.tl.x)
-            .toList();
 
-        if (rightSideOfCurrentX.isEmpty) return filteredMenuList;
+        final matchedFoodMenuList =
+            nameCluster.clusteredMenuBlockList.folder<List<FoodMenu>>(
+          [],
+          (matchedFoodMenuList, nameBlock, i, tot) {
+            final targetPriceBlockList = targetPriceClusterList
+                .map((priceCluster) => priceCluster.clusteredMenuBlockList)
+                .toList()
+                .flat<MenuBlock>();
 
-        final rightSide = rightSideOfCurrentX.first;
-        if (isPriceText(rightSide.text) == false) return filteredMenuList;
+            final combinableBlockList = targetPriceBlockList
+                .where(
+                  (element) => MenuBlock.getCombinableState(
+                    nameBlock,
+                    element,
+                    toleranceX: lineClusterGapAvg.toInt(),
+                    toleranceY: clusteringEngine.blockHeightAvg.toInt(),
+                    skipPrice: false,
+                  ),
+                )
+                .toList();
 
-        final foodMenu = _generateFoodMenu({
-          "name": menuBlock.text,
-          "price": rightSideOfCurrentX.first.text,
-        });
+            /// no matched price block found
+            if (combinableBlockList.isEmpty) {
+              return matchedFoodMenuList;
+            }
 
-        filteredMenuList.add(foodMenu);
-        return filteredMenuList;
+            final combineTargetBlockList = combinableBlockList.filter(
+              (priceBlock, i) =>
+                  matchedPriceList
+                      .any((combinedPriceBlock) => MenuBlock.isSameMenuBlock(
+                            priceBlock,
+                            combinedPriceBlock,
+                          )) ==
+                  false,
+            );
+
+            /// no matched price block found
+            if (combineTargetBlockList.isEmpty) {
+              return matchedFoodMenuList;
+            }
+
+            /// combinable price block count, over 2
+            if (combineTargetBlockList.length > 1) {
+              final closestBlockIndex = Math.findMinIndex(
+                combineTargetBlockList
+                    .map(
+                      (e) => e.block.center.distanceTo(
+                        nameBlock.block.center,
+                      ),
+                    )
+                    .toList(),
+              );
+              final closestPriceBlock = combinableBlockList[closestBlockIndex];
+              matchedFoodMenuList.add(
+                _createFoodMenu(
+                  name: nameBlock.text,
+                  price: closestPriceBlock.text,
+                ),
+              );
+              matchedNameList.add(nameBlock);
+              matchedPriceList.add(closestPriceBlock);
+              return matchedFoodMenuList;
+            }
+
+            /// only price block
+            matchedFoodMenuList.add(
+              _createFoodMenu(
+                name: nameBlock.text,
+                price: combineTargetBlockList.first.text,
+              ),
+            );
+            matchedNameList.add(nameBlock);
+            matchedPriceList.add(combineTargetBlockList.first);
+
+            return matchedFoodMenuList;
+          },
+        ).toList();
+        foodMenuList.addAll(matchedFoodMenuList);
+
+        return foodMenuList;
       },
     );
-    return menuList;
+
+    final unMatchedPriceBlockList = _filterBlockList(
+      baseBlockList: priceBlockList,
+      removeTargetBlockList: matchedPriceList,
+    );
+    final unMatchedNameBlockList = _filterBlockList(
+      baseBlockList: nameBlockList,
+      removeTargetBlockList: matchedNameList,
+    );
+    _unMatchedPriceBlockList.addAll(unMatchedPriceBlockList);
+    _unMatchedNameBlockList.addAll(unMatchedNameBlockList);
+
+    _foodMenu.addAll(menuList);
+  }
+
+  void _matchUnMatchedNameAndPrice() {
+    final MenuBlockList matchedNameBlockList = [];
+    final MenuBlockList matchedPriceBlockList = [];
+
+    print("name unmatched: ${_unMatchedNameBlockList.length}");
+    print("price unmatched: ${_unMatchedPriceBlockList.length}");
+
+    final menuList = _unMatchedNameBlockList.fold<List<FoodMenu>>(
+      [],
+      (accMenuList, nameBlock) {
+        final searchedPriceBlockList = _searchBlocksInYAxis(
+          standardBlock: nameBlock,
+          searchTargetBlockList: _unMatchedPriceBlockList,
+          searchYHeight: clusteringEngine.blockHeightAvg.toInt(),
+        );
+        searchedPriceBlockList.sort(
+          (a, b) => ascendingSort(a.block.center.x, b.block.center.x),
+        );
+
+        final priceBlockListOfRightSideOfCurrentNameBlock =
+            searchedPriceBlockList.filter(
+          (element, i) => element.block.center.x > nameBlock.block.center.x,
+        );
+
+        if (priceBlockListOfRightSideOfCurrentNameBlock.isEmpty) {
+          return accMenuList;
+        }
+
+        final combineTargetPriceBlockList =
+            priceBlockListOfRightSideOfCurrentNameBlock.filter(
+          (priceBlock, i) =>
+              matchedPriceBlockList.any(
+                (combinedPriceBlock) => MenuBlock.isSameMenuBlock(
+                  priceBlock,
+                  combinedPriceBlock,
+                ),
+              ) ==
+              false,
+        );
+        if (combineTargetPriceBlockList.isEmpty) {
+          return accMenuList;
+        }
+        if (combineTargetPriceBlockList.length > 1) {
+          final closestBlockIndex = Math.findMinIndex(
+            combineTargetPriceBlockList
+                .map(
+                  (e) => e.block.center.distanceTo(
+                    nameBlock.block.center,
+                  ),
+                )
+                .toList(),
+          );
+          final closestPriceBlock =
+              combineTargetPriceBlockList[closestBlockIndex];
+
+          matchedNameBlockList.add(nameBlock);
+          matchedPriceBlockList.add(closestPriceBlock);
+
+          final foodMenu = _createFoodMenu(
+            name: nameBlock.text,
+            price: closestPriceBlock.text,
+          );
+          accMenuList.add(foodMenu);
+          return accMenuList;
+        }
+
+        final closestPriceBlock =
+            priceBlockListOfRightSideOfCurrentNameBlock.first;
+
+        final foodMenu = _createFoodMenu(
+          name: nameBlock.text,
+          price: closestPriceBlock.text,
+        );
+        matchedNameBlockList.add(nameBlock);
+        matchedPriceBlockList.add(closestPriceBlock);
+
+        accMenuList.add(foodMenu);
+        return accMenuList;
+      },
+    );
+
+    _unMatchedNameBlockList = _filterBlockList(
+      baseBlockList: _unMatchedNameBlockList,
+      removeTargetBlockList: matchedNameBlockList,
+    );
+    _unMatchedPriceBlockList = _filterBlockList(
+      baseBlockList: _unMatchedPriceBlockList,
+      removeTargetBlockList: matchedPriceBlockList,
+    );
+
+    print("menuList length: ${menuList.length}");
+    print("name unmatched: ${_unMatchedNameBlockList.length}");
+    print("price unmatched: ${_unMatchedPriceBlockList.length}");
+
+    _foodMenu.addAll(menuList);
+  }
+
+  void _matchAllFoodMenu() {
+    _matchFoodMenuByAlignmentClustering();
+    _matchUnMatchedNameAndPrice();
   }
 }
