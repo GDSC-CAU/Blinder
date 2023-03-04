@@ -1,3 +1,4 @@
+import 'package:app/core/block/block.dart';
 import 'package:app/core/block/menu_block.dart';
 import 'package:app/core/clusters/cluster.interface.dart';
 import 'package:app/core/clusters/dbscan.dart';
@@ -5,6 +6,8 @@ import 'package:app/core/clusters/line_alignment.dart';
 import 'package:app/core/menu_engine.dart';
 import 'package:app/core/utils/sort.dart';
 import 'package:app/core/utils/statics.dart';
+import 'package:app/utils/array.dart';
+import 'package:app/utils/text.dart';
 
 enum ClusterType {
   lineAlign,
@@ -21,11 +24,22 @@ enum DataType {
 class MenuCluster {
   final MenuBlockList clusteredMenuBlockList;
   late final ClusterType clusterType;
-  late final DataType dataType;
+  DataType get dataType {
+    final priceTextCount = clusteredMenuBlockList
+        .filter((current, i) => isPriceText(current.text))
+        .length;
+
+    final isPriceOnly = priceTextCount == clusteredMenuBlockList.length;
+    final isMenuOnly = priceTextCount == 0;
+
+    if (isPriceOnly) return DataType.price;
+    if (isMenuOnly) return DataType.menu;
+    return DataType.coupled;
+  }
 
   int get clusteredCount => clusteredMenuBlockList.length;
 
-  MenuBlockList getSortedMenuBlockByYCoord(MenuBlockList targetBlockList) {
+  MenuBlockList _getSortedMenuBlockByYCoord(MenuBlockList targetBlockList) {
     targetBlockList.sort(
       (blockA, blockB) => ascendingSort(
         blockA.block.tl.y,
@@ -38,7 +52,6 @@ class MenuCluster {
   MenuCluster({
     required this.clusteredMenuBlockList,
     required this.clusterType,
-    required this.dataType,
   });
 }
 
@@ -46,18 +59,22 @@ class MenuCluster {
 class LineAlignCluster extends MenuCluster {
   LineAlignCluster({
     required super.clusteredMenuBlockList,
-    required super.dataType,
   }) : super(
           clusterType: ClusterType.lineAlign,
         );
 
   @override
   MenuBlockList get clusteredMenuBlockList =>
-      getSortedMenuBlockByYCoord(super.clusteredMenuBlockList);
+      _getSortedMenuBlockByYCoord(super.clusteredMenuBlockList);
 
-  num get lineHeight =>
-      clusteredMenuBlockList.first.block.tl.y -
-      clusteredMenuBlockList.last.block.tl.y;
+  Coord get startPoint => clusteredMenuBlockList.first.block.center;
+  Coord get endPoint => clusteredMenuBlockList.last.block.center;
+  Coord get middlePoint => Coord(
+        x: (startPoint.x + endPoint.x) / 2,
+        y: (startPoint.y + endPoint.y) / 2,
+      );
+
+  num get lineHeight => endPoint.y - startPoint.y;
 }
 
 /// `DBSCAN` clustered menu blocks
@@ -66,12 +83,11 @@ class DBSCANCluster extends MenuCluster {
     required super.clusteredMenuBlockList,
   }) : super(
           clusterType: ClusterType.dbscan,
-          dataType: DataType.coupled,
         );
 
   @override
   MenuBlockList get clusteredMenuBlockList =>
-      getSortedMenuBlockByYCoord(super.clusteredMenuBlockList);
+      _getSortedMenuBlockByYCoord(super.clusteredMenuBlockList);
 }
 
 /// `UnClustered` clustered menu blocks
@@ -80,7 +96,6 @@ class UnClustered extends MenuCluster {
     required super.clusteredMenuBlockList,
   }) : super(
           clusterType: ClusterType.unClustered,
-          dataType: DataType.coupled,
         );
 }
 
@@ -104,6 +119,9 @@ class ClusteringEngine {
   /// `Average` of menu blocks height
   late final num blockHeightAvg;
 
+  /// `Average` of menu blocks width
+  late final num blockWidthAvg;
+
   /// Clustering target
   ///
   /// First value is same as input of `MenuBlockList`
@@ -126,6 +144,25 @@ class ClusteringEngine {
 
   /// Clustered result of menu blocks
   final List<MenuCluster> menuClusters = [];
+
+  List<ClusterType> _getSpecificClusters<ClusterType extends MenuCluster>() =>
+      menuClusters.fold<List<ClusterType>>(
+        [],
+        (accCluster, cluster) {
+          if (cluster is ClusterType) {
+            accCluster.add(cluster);
+          }
+          return accCluster;
+        },
+      );
+
+  List<LineAlignCluster> get lineAlignmentClusters =>
+      _getSpecificClusters<LineAlignCluster>();
+
+  List<DBSCANCluster> get dbscanClusters =>
+      _getSpecificClusters<DBSCANCluster>();
+
+  List<UnClustered> get unClustered => _getSpecificClusters<UnClustered>();
 
   void _initializeClusteringEngines() {
     _$dbscan = DBSCAN(
@@ -156,6 +193,9 @@ class ClusteringEngine {
   }) {
     blockHeightAvg = Statics.avg(
       menuBlockList.map((e) => e.block.height).toList(),
+    ).toInt();
+    blockWidthAvg = Statics.avg(
+      menuBlockList.map((e) => e.block.width).toList(),
     ).toInt();
 
     _originalMenuBlockList = menuBlockList;
@@ -231,7 +271,6 @@ class ClusteringEngine {
 
   void lineAlignmentClustering({
     required List<MenuBlock> clusterTargetMenuBlock,
-    required DataType dataType,
   }) {
     _clusterAndUpdate(
       engine: _$lineAlign,
@@ -240,7 +279,6 @@ class ClusteringEngine {
           clusterTargetMenuBlockList.map((e) => e.block).toList(),
       createClusterInstance: (clusterTargetMenuBlockList) => LineAlignCluster(
         clusteredMenuBlockList: clusterTargetMenuBlockList,
-        dataType: dataType,
       ),
     );
   }
@@ -259,33 +297,8 @@ class ClusteringEngine {
     );
   }
 
-  ///TODO: cluster 함수가 있어야 할까? 고민 후 구현
-  // @override
-  // void cluster({bool? resetData = false, bool? cluster}) {
-  //   void _resetData() {
-  //     clusterTargetMenuBlockList = _originalMenuBlockList;
-  //     menuClusters.clear();
-  //   }
-
-  //   if (resetData == true) {
-  //     _resetData();
-  //   }
-
-  //   lineAlignmentCluster(
-  //     clusterTargetMenuBlock: _originalMenuBlockList
-  //         .filter((current, i) => isPriceText(current.text) == false),
-  //     dataType: DataType.menu,
-  //   );
-  //   lineAlignmentCluster(
-  //     clusterTargetMenuBlock: _originalMenuBlockList
-  //         .filter((current, i) => isPriceText(current.text)),
-  //     dataType: DataType.price,
-  //   );
-
-  //   dbscanClustering(
-  //     clusterTargetMenuBlock: clusterTargetMenuBlockList,
-  //   );
-
-  //   updateUnClusteredMenuBlockList();
-  // }
+  void clearClusteredResult() {
+    clusterTargetMenuBlockList = _originalMenuBlockList;
+    menuClusters.clear();
+  }
 }
