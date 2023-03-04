@@ -21,9 +21,9 @@ enum Status {
 
 class _OcrScreenState extends State<OcrScreen> {
   Status status = Status.wait;
-  final menuEngine = MenuEngine(
-    categoryFilterFunction: (category) => true,
-  );
+  String? menu;
+
+  final menuEngine = MenuEngine();
 
   Future<void> _getFoodMenu() async {
     final pickedImage = await ImagePicker.platform.getImage(
@@ -34,15 +34,20 @@ class _OcrScreenState extends State<OcrScreen> {
       status = Status.loading;
     });
 
-    final menuBoardImage = InputImage.fromFilePath(pickedImage!.path);
+    if (pickedImage == null) {
+      return;
+    }
 
-    await menuEngine.parse(
-      menuBoardImage,
-    );
-    menuEngine.menuRectBlockList.forEach(print);
+    final menuBoardImage = InputImage.fromFilePath(pickedImage.path);
+    await menuEngine.parse(menuBoardImage);
 
     setState(() {
       status = Status.success;
+      menu = menuEngine.foodMenu.fold(
+        "",
+        (previousValue, element) =>
+            "$previousValue\n ${element.name}: ${element.price}",
+      );
     });
   }
 
@@ -58,18 +63,12 @@ class _OcrScreenState extends State<OcrScreen> {
               onPressed: _getFoodMenu,
             ),
             Padding(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all(10),
               child: Text(
-                status == Status.success
-                    ? "실행 성공 ${menuEngine.foodMenu.fold(
-                        "",
-                        (previousValue, element) =>
-                            "$previousValue\n ${element.name}: ${element.price}",
-                      )}"
-                    : "로딩중",
+                status == Status.success ? "실행 성공\n$menu" : "로딩중",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 11,
                 ),
                 locale: const Locale('kr'),
               ),
