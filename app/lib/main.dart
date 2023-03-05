@@ -1,5 +1,8 @@
 import 'package:app/providers/providers.dart';
 import 'package:app/screens/test/ocr/ocr_screen.dart';
+import 'package:app/utils/camera.dart';
+import 'package:app/utils/tts.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 Future<void> setupPackages() async {
