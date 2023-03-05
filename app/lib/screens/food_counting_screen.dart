@@ -100,7 +100,10 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
                 context.read<FoodCartProvider>().addFoodCartItem(
                       FoodCartItem(
                         name: menu.name,
-                        price: menu.price * currentCartItemCount,
+
+                        ///!TODO: 가격에 계산에 대한 생각...
+                        price: num.tryParse(menu.price) ??
+                            0 * currentCartItemCount,
                         count: currentCartItemCount,
                       ),
                     );

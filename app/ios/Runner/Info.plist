@@ -51,5 +51,7 @@
 	<string>Detect menu board lively</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Detect menu board lively</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Privacy - Photo Library Usage Description</string>
 </dict>
 </plist>

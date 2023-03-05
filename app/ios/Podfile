@@ -10,6 +10,18 @@ project 'Runner', {
   'Release' => :release,
 }
 
+# To recognize Latin script
+pod 'GoogleMLKit/TextRecognition', '3.2.0'
+# To recognize Chinese script
+pod 'GoogleMLKit/TextRecognitionChinese', '3.2.0'
+# To recognize Devanagari script
+pod 'GoogleMLKit/TextRecognitionDevanagari', '3.2.0'
+# To recognize Japanese script
+pod 'GoogleMLKit/TextRecognitionJapanese', '3.2.0'
+# To recognize Korean script
+pod 'GoogleMLKit/TextRecognitionKorean', '3.2.0'
+
+
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
   unless File.exist?(generated_xcode_build_settings_path)

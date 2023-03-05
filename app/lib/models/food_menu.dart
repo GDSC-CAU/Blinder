@@ -1,13 +1,12 @@
 import 'package:app/models/model_factory.dart';
 
 class FoodMenu implements Model<FoodMenu> {
-  String name = "";
-  num price = 0;
+  String name = "", price = "";
 
   @override
   void set(JsonMap jsonMap) {
     name = jsonMap["name"] as String;
-    price = int.parse(jsonMap["price"] as String);
+    price = jsonMap["price"] as String;
   }
 
   @override
