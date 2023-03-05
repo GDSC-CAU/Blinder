@@ -21,7 +21,7 @@ class AppRouter {
   const AppRouter();
 
   static const String mainVoicePath = "/";
-  static const String foodMenuScanPath = "/scan";
+  static const String foodMenuScanPath = "/menu-scan";
   static const String foodCategoryPath = "/food-category";
   static const String foodCountingPath = "/food-counting";
   static const String foodMenuPath = "/food-menu";

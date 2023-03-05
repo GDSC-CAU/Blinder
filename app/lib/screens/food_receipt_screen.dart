@@ -21,18 +21,9 @@ class FoodReceiptScreen extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Flexible(
-            child: Column(
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 10,
-                  ),
-                  child: ScreenTitle(
-                    title: '주문서',
-                  ),
-                ),
-              ],
+          const Flexible(
+            child: ScreenTitle(
+              title: '주문서',
             ),
           ),
           Flexible(
@@ -44,25 +35,57 @@ class FoodReceiptScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: DataTable(
                     columnSpacing: 40,
-                    dataRowHeight: 70,
-                    decoration: BoxDecoration(
-                      color: Palette.$brown100,
-                      borderRadius: BorderRadius.circular(20),
+                    dataRowHeight: 60,
+                    headingRowColor: MaterialStateProperty.all(
+                      Palette.$brown100,
+                    ),
+                    dividerThickness: 1,
+                    border: const TableBorder(
+                      bottom: BorderSide(
+                        color: Palette.$brown300,
+                        width: 4,
+                        strokeAlign: BorderSide.strokeAlignOutside,
+                      ),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10),
+                      ),
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Palette.$white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
                     ),
                     columns: const [
                       DataColumn(
                         label: Text(
                           '메뉴',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           '개수',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           '가격',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -75,22 +98,21 @@ class FoodReceiptScreen extends StatelessWidget {
           ),
           Flexible(
             child: ScreenTitle(
-              title: '총 가격:  $totalPrice 원',
+              title: '총 가격: $totalPrice 원',
             ),
           ),
           Flexible(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: BottomButton(
-                text: '돌아가기',
-                onPressed: () {
-                  context.read<FoodCartProvider>().clearFoodCartItems();
-                  AppRouter.moveAndClear(context,
-                      to: RouterPath.mainVoice,
-                      clearRouterStackUntil: (route) => false);
-                },
-                ttsText: '메인 화면으로 돌아갑니다.',
-              ),
+            child: BottomButton(
+              text: '돌아가기',
+              onPressed: () {
+                context.read<FoodCartProvider>().clearFoodCartItems();
+                AppRouter.moveAndClear(
+                  context,
+                  to: RouterPath.mainVoice,
+                  clearRouterStackUntil: (route) => false,
+                );
+              },
+              ttsText: '메인 화면으로 돌아갑니다.',
             ),
           ),
         ],
