@@ -506,19 +506,6 @@ class MenuEngine {
             false,
       );
 
-  MenuBlockList _filterOneBlock(
-    MenuBlockList totBlockList,
-    MenuBlock targetBlock,
-  ) =>
-      totBlockList.filter(
-        (block, _) =>
-            MenuBlock.isSameMenuBlock(
-              targetBlock,
-              block,
-            ) ==
-            false,
-      );
-
   MenuBlockList _searchBlocksInYAxis({
     required MenuBlockList searchTargetBlockList,
     required MenuBlock standardBlock,
@@ -562,7 +549,10 @@ class MenuEngine {
     );
     final clusteredList = clusteringEngine.lineAlignmentClusters;
     clusteredList.sort(
-      (a, b) => ascendingSort(a.middlePoint.x, b.middlePoint.x),
+      (a, b) => ascendingSort(
+        a.middlePoint.x,
+        b.middlePoint.x,
+      ),
     );
 
     clusteringEngine.clearClusteredResult();
@@ -729,9 +719,6 @@ class MenuEngine {
     final MenuBlockList matchedNameBlockList = [];
     final MenuBlockList matchedPriceBlockList = [];
 
-    print("name unmatched: ${_unMatchedNameBlockList.length}");
-    print("price unmatched: ${_unMatchedPriceBlockList.length}");
-
     final menuList = _unMatchedNameBlockList.fold<List<FoodMenu>>(
       [],
       (accMenuList, nameBlock) {
@@ -815,13 +802,16 @@ class MenuEngine {
       removeTargetBlockList: matchedPriceBlockList,
     );
 
-    print("menuList length: ${menuList.length}");
     print("name unmatched: ${_unMatchedNameBlockList.length}");
     print("price unmatched: ${_unMatchedPriceBlockList.length}");
 
     _foodMenu.addAll(menuList);
   }
 
+  /// Match `name` to `price`
+  ///
+  /// 1. `LineAlignment` clustering
+  /// 2. Use `name` to `price` matching algorithm
   void _matchAllFoodMenu() {
     _matchFoodMenuByAlignmentClustering();
     _matchUnMatchedNameAndPrice();
