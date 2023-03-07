@@ -32,6 +32,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
+  flutter_tflite: ^1.0.1
   flutter_tts: ^3.6.3
   google_ml_kit: ^0.13.0
   http: ^0.13.5
@@ -40,7 +41,6 @@ dependencies:
   intl: ^0.18.0
   photofilters: ^3.0.1
   provider: ^6.0.5
-  tflite: ^1.1.2
 
 dev_dependencies:
   flutter_lints: ^2.0.0
@@ -52,5 +52,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
+    - assets/label.txt
     - assets/menu-detector.tflite
+    - assets/test_image.jpg
   uses-material-design: true
