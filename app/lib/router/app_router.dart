@@ -1,58 +1,30 @@
-import 'package:app/screens/food_category_screen.dart';
-import 'package:app/screens/food_counting_screen.dart';
-import 'package:app/screens/food_menu_scan_screen.dart';
-import 'package:app/screens/food_menu_screen.dart';
-import 'package:app/screens/food_order_screen.dart';
-import 'package:app/screens/food_receipt_screen.dart';
-import 'package:app/screens/main_voice_screen.dart';
+import 'package:app/screens/food_menu_board.dart';
+import 'package:app/screens/food_scan_screen.dart';
 import 'package:flutter/material.dart';
 
 enum RouterPath {
-  mainVoice,
+  foodMenuBoard,
   foodMenuScan,
-  foodCategory,
-  foodMenu,
-  foodCounting,
-  foodOrder,
-  foodReceipt,
 }
 
 class AppRouter {
   const AppRouter();
 
-  static const String mainVoicePath = "/";
   static const String foodMenuScanPath = "/menu-scan";
-  static const String foodCategoryPath = "/food-category";
-  static const String foodCountingPath = "/food-counting";
   static const String foodMenuPath = "/food-menu";
-  static const String foodOrderPath = "/food-order";
-  static const String foodReceiptPath = "/food-receipt";
 
   static const Map<RouterPath, String> routePath = {
-    RouterPath.mainVoice: mainVoicePath,
     RouterPath.foodMenuScan: foodMenuScanPath,
-    RouterPath.foodCategory: foodCategoryPath,
-    RouterPath.foodCounting: foodCountingPath,
-    RouterPath.foodMenu: foodMenuPath,
-    RouterPath.foodOrder: foodOrderPath,
-    RouterPath.foodReceipt: foodReceiptPath,
+    RouterPath.foodMenuBoard: foodMenuPath,
   };
 
-  static const Widget initialScreen = MainVoiceScreen();
+  static const Widget initialScreen = FoodScanScreen();
 
   static final Map<String, Widget Function(BuildContext)> routes = {
     routePath[RouterPath.foodMenuScan] ?? foodMenuScanPath: (context) =>
-        const FoodMenuScanScreen(),
-    routePath[RouterPath.foodCategory] ?? foodCategoryPath: (context) =>
-        const FoodCategoryScreen(),
-    routePath[RouterPath.foodMenu] ?? foodMenuPath: (context) =>
-        const FoodMenuScreen(),
-    routePath[RouterPath.foodCounting] ?? foodCountingPath: (context) =>
-        const FoodCountingScreen(),
-    routePath[RouterPath.foodOrder] ?? foodOrderPath: (context) =>
-        const FoodOrderScreen(),
-    routePath[RouterPath.foodReceipt] ?? foodReceiptPath: (context) =>
-        const FoodReceiptScreen(),
+        const FoodScanScreen(),
+    routePath[RouterPath.foodMenuBoard] ?? foodMenuPath: (context) =>
+        const FoodMenuBoard(),
   };
 
   static void move<RoutingArguments extends Object>(
