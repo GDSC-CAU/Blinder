@@ -1,5 +1,5 @@
 import 'package:app/providers/providers.dart';
-import 'package:app/screens/test/ocr/ocr_screen.dart';
+import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
@@ -16,7 +16,7 @@ Future<void> setupPackages() async {
 }
 
 Future<void> main() async {
-  await setupPackages();
+  // await setupPackages();
 
   runApp(const Blinder());
 }
@@ -26,14 +26,13 @@ class Blinder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Providers(
+    return Providers(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: "Blinder",
-        // routes: AppRouter.routes,
-        // home: AppRouter.initialScreen,
-        // initialRoute: AppRouter.mainVoicePath,
-        home: OcrScreen(),
+        routes: AppRouter.routes,
+        home: AppRouter.initialScreen,
+        initialRoute: AppRouter.foodMenuScanPath,
       ),
     );
   }
