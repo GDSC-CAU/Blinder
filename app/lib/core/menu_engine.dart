@@ -14,15 +14,9 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 
 typedef MenuBlockList = List<MenuBlock>;
 
-enum ClusteringEngineStatus {
-  initialized,
-  waited,
-}
-
 class MenuEngine {
   final TextRecognizer _textRecognizer;
-  late final ClusteringEngine clusteringEngine;
-  ClusteringEngineStatus clusteringEngineStatus = ClusteringEngineStatus.waited;
+  final ClusteringEngine clusteringEngine;
 
   MenuBlockList menuBlockList = [];
   MenuBlockList _unMatchedNameBlockList = [];
@@ -37,16 +31,24 @@ class MenuEngine {
   MenuEngine()
       : _textRecognizer = GoogleMlKit.vision.textRecognizer(
           script: TextRecognitionScript.korean,
+        ),
+        clusteringEngine = ClusteringEngine(
+          menuBlockList: [],
+          maximumAngleOfYAxis: 5,
+          maximumPointGapRatio: 5,
+          minimumPointOfLine: 2,
         );
 
   void _clearPreviousResult() {
+    clusteringEngine.clearClusteredResult();
+
     menuBlockList = [];
     _foodMenu = [];
     _unMatchedNameBlockList = [];
     _unMatchedPriceBlockList = [];
   }
 
-  Future<void> _initializeParser(
+  Future<void> _updateMenuBlockListFromNewImage(
     InputImage image,
   ) async {
     final recognizedText = await _textRecognizer.processImage(image);
@@ -56,10 +58,6 @@ class MenuEngine {
       recognizedText,
     );
     _setupBlockList();
-
-    if (clusteringEngineStatus == ClusteringEngineStatus.waited) {
-      _initializeClusteringEngine();
-    }
   }
 
   /// Parse food menu
@@ -67,7 +65,8 @@ class MenuEngine {
     InputImage image,
   ) async {
     _clearPreviousResult();
-    await _initializeParser(image);
+    await _updateMenuBlockListFromNewImage(image);
+    clusteringEngine.updateMenuBlockList(menuBlockList);
   }
 
   MenuBlockList _getMenuRectBlockListByRecognizedText(
@@ -481,16 +480,6 @@ class MenuEngine {
     _updateMenuBlockList(filteredByJOSA);
   }
 
-  void _initializeClusteringEngine() {
-    clusteringEngine = ClusteringEngine(
-      menuBlockList: menuBlockList,
-      maximumAngleOfYAxis: 5,
-      maximumPointGapRatio: 5,
-      minimumPointOfLine: 2,
-    );
-    clusteringEngineStatus = ClusteringEngineStatus.initialized;
-  }
-
   MenuBlockList _filterBlockList({
     required MenuBlockList baseBlockList,
     required MenuBlockList removeTargetBlockList,
@@ -801,9 +790,6 @@ class MenuEngine {
       baseBlockList: _unMatchedPriceBlockList,
       removeTargetBlockList: matchedPriceBlockList,
     );
-
-    print("name unmatched: ${_unMatchedNameBlockList.length}");
-    print("price unmatched: ${_unMatchedPriceBlockList.length}");
 
     _foodMenu.addAll(menuList);
   }
