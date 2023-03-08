@@ -308,7 +308,7 @@ class ClusteringEngine {
   }
 
   void updateMenuBlockList(MenuBlockList newMenuBlockList) {
-    _originalMenuBlockList.clear();
+    if (_originalMenuBlockList.isNotEmpty) _originalMenuBlockList.clear();
     _originalMenuBlockList.addAll(newMenuBlockList);
 
     _updateBlockGeometryStatics(newMenuBlockList);
