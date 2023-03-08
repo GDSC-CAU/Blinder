@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:app/services/core/api_response.dart';
 import 'package:http/http.dart' as http;
 
@@ -31,8 +33,47 @@ class ApiService {
       '$baseUrl${endpoint != null ? _transformToEndPoint(endpoint) : ''}',
     );
     try {
-      apiResponse.handleResponse(
+      await apiResponse.handleResponse(
         response: await http.get(parsedUri),
+      );
+
+      return apiResponse.data;
+    } catch (e) {
+      throw Exception(
+        "ERROR in api_service $e",
+      );
+    }
+  }
+
+  Future<void> postImage<T>({
+    required File image,
+    required String fileName,
+    T? endPoint,
+  }) async {
+    final Uri parsedUri = Uri.parse(
+      '$baseUrl${endPoint != null ? _transformToEndPoint(endPoint) : ''}',
+    );
+
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        parsedUri,
+      );
+
+      final fileLength = await image.length();
+      final fileStream = http.ByteStream(
+        image.openRead(),
+      );
+      final multipartFile = http.MultipartFile(
+        'image',
+        fileStream,
+        fileLength,
+        filename: fileName,
+      );
+      request.files.add(multipartFile);
+
+      await apiResponse.handleResponse(
+        response: await request.send(),
       );
 
       return apiResponse.data;
