@@ -2,7 +2,6 @@ import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/menu_button.dart';
 import 'package:app/common/widgets/screen_title.dart';
 import 'package:app/providers/food_map_provider.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,11 +43,11 @@ class FoodMenuScreen extends StatelessWidget {
                         return MenuButton(
                           text: "${food.name}, ${food.price}원",
                           onPressed: () {
-                            AppRouter.move(
-                              context,
-                              to: RouterPath.foodCounting,
-                              arguments: food,
-                            );
+                            // AppRouter.move(
+                            //   context,
+                            //   to: RouterPath.foodCounting,
+                            //   arguments: food,
+                            // );
                           },
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

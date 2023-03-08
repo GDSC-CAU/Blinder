@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:app/common/widgets/bottom_button.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -35,10 +34,10 @@ class _FoodMenuScanScreenState extends State<FoodMenuScanScreen> {
   }
 
   void moveToFoodCategory() {
-    AppRouter.move(
-      context,
-      to: RouterPath.foodCategory,
-    );
+    // AppRouter.move(
+    //   context,
+    //   to: RouterPath.foodCategory,
+    // );
     appCameraController.destroyController();
   }
 
