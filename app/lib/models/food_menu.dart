@@ -4,7 +4,7 @@ class FoodMenu implements Model<FoodMenu> {
   String name = "", price = "";
 
   @override
-  void set(JsonMap jsonMap) {
+  void set(jsonMap) {
     name = jsonMap["name"] as String;
     price = jsonMap["price"] as String;
   }

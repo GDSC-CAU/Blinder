@@ -6,9 +6,9 @@ enum SerializedStatus {
 typedef JsonMap = Map<String, dynamic>;
 
 abstract class Model<ModelType> {
-  void set(JsonMap jsonMap) {}
+  void set(dynamic jsonMap) {}
   ModelType create();
-  JsonMap toJson();
+  dynamic toJson();
 }
 
 /// ### 1. Define model class
@@ -169,9 +169,9 @@ class ModelFactory<ModelType extends Model<ModelType>> {
   }
 
   /// Deserialize `Model` to `JsonMap`
-  static JsonMap deserialize(Model model) => model.toJson();
+  static JsonMap deserialize(Model model) => model.toJson() as JsonMap;
 
   /// Deserialize `List<Model>` to `List<JsonMap>`
   static List<JsonMap> deserializeList(List<Model> models) =>
-      models.map((model) => model.toJson()).toList();
+      models.map((model) => model.toJson()).toList() as List<JsonMap>;
 }
