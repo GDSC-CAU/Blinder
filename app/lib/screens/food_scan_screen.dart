@@ -5,7 +5,6 @@ import 'package:app/models/food_menu.dart';
 import 'package:app/providers/food_menu_provider.dart';
 import 'package:app/router/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +27,7 @@ class _FoodScanScreenState extends State<FoodScanScreen> {
   String? menu;
 
   final menuEngine = MenuEngine();
+
   List<FoodMenu> foodMenuList = [];
 
   Future<void> _getFoodMenu() async {
@@ -43,8 +43,11 @@ class _FoodScanScreenState extends State<FoodScanScreen> {
       return;
     }
 
-    final menuBoardImage = InputImage.fromFilePath(pickedImage.path);
-    await menuEngine.parse(menuBoardImage);
+    await menuEngine.parse(pickedImage.path);
+
+    print("===============================================================");
+    print("이미지 경로: ${pickedImage.path}");
+    print("받은 block 갯수: ${menuEngine.menuBlockList.length}\n");
 
     setState(() {
       status = Status.success;
