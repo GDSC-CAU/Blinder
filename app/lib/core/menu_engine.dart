@@ -3,6 +3,7 @@
 import 'package:app/core/block/block.dart';
 import 'package:app/core/block/menu_block.dart';
 import 'package:app/core/clusters/clustering_engine.dart';
+import 'package:app/core/menu_block_parser.dart';
 import 'package:app/core/utils/math.dart';
 import 'package:app/core/utils/sort.dart';
 import 'package:app/core/utils/statics.dart';
@@ -10,19 +11,12 @@ import 'package:app/models/food_menu.dart';
 import 'package:app/models/model_factory.dart';
 import 'package:app/utils/array.dart';
 import 'package:app/utils/text.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
 
 typedef MenuBlockList = List<MenuBlock>;
 
-enum ClusteringEngineStatus {
-  initialized,
-  waited,
-}
-
 class MenuEngine {
-  final TextRecognizer _textRecognizer;
-  late final ClusteringEngine clusteringEngine;
-  ClusteringEngineStatus clusteringEngineStatus = ClusteringEngineStatus.waited;
+  final ClusteringEngine clusteringEngine;
+  final MenuBlockParser menuBlockParser = MenuBlockParser();
 
   MenuBlockList menuBlockList = [];
   MenuBlockList _unMatchedNameBlockList = [];
@@ -35,79 +29,37 @@ class MenuEngine {
   }
 
   MenuEngine()
-      : _textRecognizer = GoogleMlKit.vision.textRecognizer(
-          script: TextRecognitionScript.korean,
+      : clusteringEngine = ClusteringEngine(
+          menuBlockList: [],
+          maximumAngleOfYAxis: 5,
+          maximumPointGapRatio: 4,
+          minimumPointOfLine: 2,
         );
 
   void _clearPreviousResult() {
+    clusteringEngine.clearClusteredResult();
+
     menuBlockList = [];
     _foodMenu = [];
     _unMatchedNameBlockList = [];
     _unMatchedPriceBlockList = [];
   }
 
-  Future<void> _initializeParser(
-    InputImage image,
-  ) async {
-    final recognizedText = await _textRecognizer.processImage(image);
-    _textRecognizer.close();
-
-    menuBlockList = _getMenuRectBlockListByRecognizedText(
-      recognizedText,
-    );
-    _setupBlockList();
-
-    if (clusteringEngineStatus == ClusteringEngineStatus.waited) {
-      _initializeClusteringEngine();
-    }
-  }
-
   /// Parse food menu
   Future<void> parse(
-    InputImage image,
+    String imagePath,
   ) async {
     _clearPreviousResult();
-    await _initializeParser(image);
-  }
 
-  MenuBlockList _getMenuRectBlockListByRecognizedText(
-    RecognizedText recognizedText,
-  ) {
-    final MenuBlockList transformedMenuBlockList = [];
+    await menuBlockParser.parse(
+      imagePath,
+    );
+    menuBlockList = menuBlockParser.menuBlockList;
 
-    for (final TextBlock block in recognizedText.blocks) {
-      for (final TextLine line in block.lines) {
-        for (final TextElement element in line.elements) {
-          transformedMenuBlockList.add(
-            MenuBlock(
-              text: element.text,
-              block: Block(
-                initialPosition: RectPosition(
-                  tl: Coord(
-                    x: element.cornerPoints[0].x,
-                    y: element.cornerPoints[0].y,
-                  ),
-                  tr: Coord(
-                    x: element.cornerPoints[1].x,
-                    y: element.cornerPoints[1].y,
-                  ),
-                  br: Coord(
-                    x: element.cornerPoints[2].x,
-                    y: element.cornerPoints[2].y,
-                  ),
-                  bl: Coord(
-                    x: element.cornerPoints[3].x,
-                    y: element.cornerPoints[3].y,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-      }
-    }
-
-    return transformedMenuBlockList;
+    _setupBlockList();
+    clusteringEngine.updateMenuBlockList(
+      menuBlockList,
+    );
   }
 
   void _setupBlockList() {
@@ -115,7 +67,10 @@ class MenuEngine {
     _normalizeBlockList();
     _filterBlockByHeightDistribution();
     _sortBlockListByCoordYX();
-    _combineBlockList();
+    _combineBlockList(
+      scaleRatioOfSearchWidth: 3,
+      scaleRatioOfSearchHeight: 0.65,
+    );
     _filterBlocksByKOREAN_JOSA_LIST();
     _removeInvalidCharacters();
   }
@@ -227,7 +182,7 @@ class MenuEngine {
   }
 
   void _combineBlockList({
-    double scaleRatioOfSearchWidth = 2.25,
+    double scaleRatioOfSearchWidth = 2.5,
     double scaleRatioOfSearchHeight = 0.75,
   }) {
     final heightAvg = Statics.avg(
@@ -479,16 +434,6 @@ class MenuEngine {
     );
 
     _updateMenuBlockList(filteredByJOSA);
-  }
-
-  void _initializeClusteringEngine() {
-    clusteringEngine = ClusteringEngine(
-      menuBlockList: menuBlockList,
-      maximumAngleOfYAxis: 5,
-      maximumPointGapRatio: 5,
-      minimumPointOfLine: 2,
-    );
-    clusteringEngineStatus = ClusteringEngineStatus.initialized;
   }
 
   MenuBlockList _filterBlockList({
@@ -801,9 +746,6 @@ class MenuEngine {
       baseBlockList: _unMatchedPriceBlockList,
       removeTargetBlockList: matchedPriceBlockList,
     );
-
-    print("name unmatched: ${_unMatchedNameBlockList.length}");
-    print("price unmatched: ${_unMatchedPriceBlockList.length}");
 
     _foodMenu.addAll(menuList);
   }

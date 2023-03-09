@@ -3,7 +3,6 @@ import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/bottom_button.dart';
 import 'package:app/common/widgets/screen_title.dart';
 import 'package:app/providers/cart_provider.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -106,11 +105,11 @@ class FoodReceiptScreen extends StatelessWidget {
               text: '돌아가기',
               onPressed: () {
                 context.read<FoodCartProvider>().clearFoodCartItems();
-                AppRouter.moveAndClear(
-                  context,
-                  to: RouterPath.mainVoice,
-                  clearRouterStackUntil: (route) => false,
-                );
+                // AppRouter.moveAndClear(
+                //   context,
+                //   to: RouterPath.mainVoice,
+                //   clearRouterStackUntil: (route) => false,
+                // );
               },
               ttsText: '메인 화면으로 돌아갑니다.',
             ),

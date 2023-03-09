@@ -23,9 +23,9 @@ class ApiResponse {
   }) =>
       int.parse("$number".split("")[0]);
 
-  void handleResponse({
-    required Response response,
-  }) {
+  Future<void> handleResponse<T extends BaseResponse>({
+    required T response,
+  }) async {
     statusCode = response.statusCode;
     final statusCodeInitialNumber = _getResponseCodeNumber(
       number: response.statusCode,
@@ -37,9 +37,16 @@ class ApiResponse {
         break;
       case 2:
         status = Status.success;
-        data = _transformResponseToJson(
-          response.body,
-        );
+        if (response is Response) {
+          data = _transformResponseToJson(
+            response.body,
+          );
+        }
+        if (response is StreamedResponse) {
+          data = _transformResponseToJson(
+            await response.stream.bytesToString(),
+          );
+        }
         break;
       case 3:
         data = null;
