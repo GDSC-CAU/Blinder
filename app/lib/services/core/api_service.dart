@@ -1,6 +1,6 @@
-import 'dart:io';
-
+import 'package:app/models/model_factory.dart';
 import 'package:app/services/core/api_response.dart';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
@@ -45,8 +45,9 @@ class ApiService {
     }
   }
 
-  Future<void> postImage<T>({
-    required File image,
+  Future<JsonMap?> postImage<T>({
+    required String imagePath,
+    required String imageKey,
     required String fileName,
     T? endPoint,
   }) async {
@@ -55,28 +56,20 @@ class ApiService {
     );
 
     try {
-      final request = http.MultipartRequest(
-        'POST',
+      final dio = Dio();
+
+      final formData = FormData.fromMap({
+        imageKey: await MultipartFile.fromFile(
+          imagePath,
+        ),
+      });
+
+      final response = await dio.postUri<Map<String, dynamic>>(
         parsedUri,
+        data: formData,
       );
 
-      final fileLength = await image.length();
-      final fileStream = http.ByteStream(
-        image.openRead(),
-      );
-      final multipartFile = http.MultipartFile(
-        'image',
-        fileStream,
-        fileLength,
-        filename: fileName,
-      );
-      request.files.add(multipartFile);
-
-      await apiResponse.handleResponse(
-        response: await request.send(),
-      );
-
-      return apiResponse.data;
+      return response.data;
     } catch (e) {
       throw Exception(
         "ERROR in api_service $e",
