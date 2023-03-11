@@ -1,6 +1,6 @@
 import 'package:app/common/widgets/app_scaffold.dart';
+import 'package:app/utils/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tflite/flutter_tflite.dart';
 
 class DetectionTestScreen extends StatefulWidget {
   const DetectionTestScreen({super.key});
@@ -12,47 +12,42 @@ class DetectionTestScreen extends StatefulWidget {
 class _DetectionTestScreenState extends State<DetectionTestScreen> {
   String? result = 'Detect Image';
 
-  Future<void> _initModel() async {
-    await Tflite.loadModel(
-      model: "assets/menu-detector.tflite",
-      labels: "assets/label.txt",
-    );
-  }
-
-  Future<void> _closeModel() async {
-    await Tflite.close();
-  }
+  Future<void> _initModel() async {}
 
   @override
   void initState() {
     _initModel();
+    appCameraController.initializeCamera(
+      (_) {
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
+    print('previewSize: $appCameraController.controller.value.previewSize');
     super.initState();
   }
 
   @override
   void dispose() {
-    _closeModel();
     super.dispose();
   }
 
-  void recognizeMenu() {
-    Tflite.detectObjectOnImage(
-      path: 'assets/test_image.jpg',
-    ).then((value) {
-      setState(() {
-        result = value.toString();
-      });
-    });
-  }
+  Future<void> recognizeMenu() async {}
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    print(screenSize.toString());
     return AppScaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(result ?? 'Detect Image'),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              maximumSize: const Size(300, 200),
+            ),
             child: const Text('Detect Image'),
             onPressed: () {
               setState(() {

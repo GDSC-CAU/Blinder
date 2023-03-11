@@ -28,11 +28,10 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  camera: ^0.10.3
+  camera: ^0.8.1+3
   cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
-  flutter_tflite: ^1.0.1
   flutter_tts: ^3.6.3
   google_ml_kit: ^0.13.0
   http: ^0.13.5
@@ -41,6 +40,11 @@ dependencies:
   intl: ^0.18.0
   photofilters: ^3.0.1
   provider: ^6.0.5
+  tflite_flutter: ^0.9.0
+  tflite_flutter_helper:
+    git:
+      url: https://github.com/filofan1/tflite_flutter_helper.git
+      ref: 783f15e5a87126159147d8ea30b98eea9207ac70
 
 dev_dependencies:
   flutter_lints: ^2.0.0
@@ -54,5 +58,5 @@ flutter:
   assets:
     - assets/label.txt
     - assets/menu-detector.tflite
-    - assets/test_image.jpg
+    - assets/menu.jpg
   uses-material-design: true
