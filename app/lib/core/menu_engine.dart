@@ -591,11 +591,12 @@ class MenuEngine {
 
             final combineTargetBlockList = combinableBlockList.filter(
               (priceBlock, i) =>
-                  matchedPriceList
-                      .any((combinedPriceBlock) => MenuBlock.isSameMenuBlock(
-                            priceBlock,
-                            combinedPriceBlock,
-                          )) ==
+                  matchedPriceList.any(
+                    (matchedPriceBlock) => MenuBlock.isSameMenuBlock(
+                      priceBlock,
+                      matchedPriceBlock,
+                    ),
+                  ) ==
                   false,
             );
 
@@ -605,6 +606,7 @@ class MenuEngine {
             }
 
             /// combinable price block count, over 2
+            /// TODO: price block 왼쪽에 있는 block 병합 -> 바로 왼쪽에 있는 block만 이름으로 인식되어서 중, 이런 것들이 메뉴이름으로 인식된다
             if (combineTargetBlockList.length > 1) {
               final closestBlockIndex = Math.findMinIndex(
                 combineTargetBlockList
