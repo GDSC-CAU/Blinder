@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+    sdk: ">=2.19.0 <3.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -28,30 +28,32 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  camera: ^0.8.1+3
-  cupertino_icons: ^1.0.2
-  flutter:
-    sdk: flutter
-  flutter_tts: ^3.6.3
-  google_ml_kit: ^0.13.0
-  http: ^0.13.5
-  image: ^3.0.1
-  image_picker: ^0.8.6+1
-  intl: ^0.18.0
-  photofilters: ^3.0.1
-  provider: ^6.0.5
+    camera: ^0.8.1+3
+    cupertino_icons: ^1.0.2
+    flutter:
+        sdk: flutter
+    flutter_tts: ^3.6.3
+    google_ml_kit: ^0.13.0
+    http: ^0.13.5
+    image: ^3.0.1
+    image_picker: ^0.8.6+1
+    intl: ^0.18.0
+    photofilters: ^3.0.1
+    provider: ^6.0.5
+    google_mlkit_object_detection: ^0.6.0
+    path: ^1.8.2
 
 dev_dependencies:
-  flutter_lints: ^2.0.0
-  flutter_test:
-    sdk: flutter
-  logger: ^1.1.0
+    flutter_lints: ^2.0.0
+    flutter_test:
+        sdk: flutter
+    logger: ^1.1.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 # The following section is specific to Flutter packages.
 flutter:
-  assets:
-    - assets/label.txt
-    - assets/menu-detector.tflite
-    - assets/menu.jpg
-  uses-material-design: true
+    assets:
+        - assets/label.txt
+        - assets/ml/menu-detector.tflite
+        - assets/menu.jpg
+    uses-material-design: true
