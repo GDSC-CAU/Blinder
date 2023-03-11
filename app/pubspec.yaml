@@ -40,11 +40,6 @@ dependencies:
   intl: ^0.18.0
   photofilters: ^3.0.1
   provider: ^6.0.5
-  tflite_flutter: ^0.9.0
-  tflite_flutter_helper:
-    git:
-      url: https://github.com/filofan1/tflite_flutter_helper.git
-      ref: 783f15e5a87126159147d8ea30b98eea9207ac70
 
 dev_dependencies:
   flutter_lints: ^2.0.0
