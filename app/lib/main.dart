@@ -11,8 +11,8 @@ Future<void> setupPackages() async {
   await initTts();
   await initializeCameraInstance(
     resolution: ResolutionPreset.max,
+    imageFormatGroup: ImageFormatGroup.yuv420,
   );
-  appCameraController.destroyController();
 }
 
 Future<void> main() async {

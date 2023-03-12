@@ -121,7 +121,7 @@ class _CameraViewState extends State<CameraView> {
     );
   }
 
-  Future _startLiveFeed() async {
+  Future<void> _startLiveFeed() async {
     appCameraController.initializeCamera(
       (_) async {
         if (mounted) {
@@ -136,27 +136,33 @@ class _CameraViewState extends State<CameraView> {
               maxZoomLevel = value;
             },
           );
-          await appCameraController.controller
-              .startImageStream(_processCameraImage);
+
+          await appCameraController.controller.startImageStream(
+            _processCameraImage,
+          );
         }
       },
     );
   }
 
-  Future _stopLiveFeed() async {
+  Future<void> _stopLiveFeed() async {
     await appCameraController.controller.stopImageStream();
     appCameraController.destroyController();
   }
 
-  Future _processCameraImage(CameraImage image) async {
+  void _processCameraImage(CameraImage image) {
+    InputImageFormat? inputImageFormat;
+
     final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {
       allBytes.putUint8List(plane.bytes);
     }
     final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
+    final Size imageSize = Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
 
     final imageRotation = InputImageRotationValue.fromRawValue(
       appCameraController.cameras.first.sensorOrientation,
@@ -164,32 +170,37 @@ class _CameraViewState extends State<CameraView> {
     if (imageRotation == null) return;
 
     if (image.format.raw is int) {
-      final InputImageFormat? inputImageFormat =
+      inputImageFormat =
           InputImageFormatValue.fromRawValue(image.format.raw as int);
-
-      final planeData = image.planes.map(
-        (Plane plane) {
-          return InputImagePlaneMetadata(
-            bytesPerRow: plane.bytesPerRow,
-            height: plane.height,
-            width: plane.width,
-          );
-        },
-      ).toList();
-
-      if (inputImageFormat == null) return;
-
-      final inputImageData = InputImageData(
-        size: imageSize,
-        imageRotation: imageRotation,
-        inputImageFormat: inputImageFormat,
-        planeData: planeData,
-      );
-
-      final inputImage =
-          InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
-
-      widget.onImage(inputImage);
+    } else {
+      inputImageFormat =
+          InputImageFormatValue.fromRawValue(image.format.raw as int);
     }
+
+    final planeData = image.planes.map(
+      (Plane plane) {
+        return InputImagePlaneMetadata(
+          bytesPerRow: plane.bytesPerRow,
+          height: plane.height,
+          width: plane.width,
+        );
+      },
+    ).toList();
+
+    if (inputImageFormat == null) return;
+
+    final inputImageData = InputImageData(
+      size: imageSize,
+      imageRotation: imageRotation,
+      inputImageFormat: inputImageFormat,
+      planeData: planeData,
+    );
+
+    final inputImage = InputImage.fromBytes(
+      bytes: bytes,
+      inputImageData: inputImageData,
+    );
+
+    widget.onImage(inputImage);
   }
 }
