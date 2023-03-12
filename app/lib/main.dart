@@ -10,7 +10,7 @@ Future<void> setupPackages() async {
 
   await initTts();
   await initializeCameraInstance(
-    resolution: ResolutionPreset.max,
+    resolution: ResolutionPreset.high,
     imageFormatGroup: ImageFormatGroup.yuv420,
   );
 }
