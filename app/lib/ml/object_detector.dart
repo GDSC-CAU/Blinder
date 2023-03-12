@@ -54,8 +54,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   ) async {
     print('Set detector in mode: $mode');
 
-    // const path = 'assets/ml/menu-detector.tflite';
-    const path = 'assets/ml/test.tflite';
+    const path = 'assets/ml/menu-detector.tflite';
     final modelPath = await _getModel(path);
     final options = LocalObjectDetectorOptions(
       mode: mode,

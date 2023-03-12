@@ -18,7 +18,7 @@ class ObjectDetectorPainter extends CustomPainter {
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
-      ..color = Colors.lightGreenAccent;
+      ..color = Colors.red;
 
     final Paint background = Paint()..color = const Color(0x99000000);
 
