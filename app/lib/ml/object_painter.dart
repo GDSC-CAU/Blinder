@@ -7,11 +7,15 @@ import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart
 import 'coordinates_translator.dart';
 
 class ObjectDetectorPainter extends CustomPainter {
-  ObjectDetectorPainter(this._objects, this.rotation, this.absoluteSize);
-
-  final List<DetectedObject> _objects;
+  final List<DetectedObject> detectedObjectList;
   final Size absoluteSize;
   final InputImageRotation rotation;
+
+  ObjectDetectorPainter({
+    required this.detectedObjectList,
+    required this.rotation,
+    required this.absoluteSize,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -22,15 +26,20 @@ class ObjectDetectorPainter extends CustomPainter {
 
     final Paint background = Paint()..color = const Color(0x99000000);
 
-    for (final DetectedObject detectedObject in _objects) {
+    for (final DetectedObject detectedObject in detectedObjectList) {
       final ParagraphBuilder builder = ParagraphBuilder(
         ParagraphStyle(
-            textAlign: TextAlign.left,
-            fontSize: 16,
-            textDirection: TextDirection.ltr),
+          textAlign: TextAlign.left,
+          fontSize: 16,
+          textDirection: TextDirection.ltr,
+        ),
       );
       builder.pushStyle(
-          ui.TextStyle(color: Colors.lightGreenAccent, background: background));
+        ui.TextStyle(
+          color: Colors.lightGreenAccent,
+          background: background,
+        ),
+      );
 
       for (final Label label in detectedObject.labels) {
         builder.addText('${label.text} ${label.confidence}\n');
@@ -39,13 +48,29 @@ class ObjectDetectorPainter extends CustomPainter {
       builder.pop();
 
       final left = translateX(
-          detectedObject.boundingBox.left, rotation, size, absoluteSize);
+        detectedObject.boundingBox.left,
+        rotation,
+        size,
+        absoluteSize,
+      );
       final top = translateY(
-          detectedObject.boundingBox.top, rotation, size, absoluteSize);
+        detectedObject.boundingBox.top,
+        rotation,
+        size,
+        absoluteSize,
+      );
       final right = translateX(
-          detectedObject.boundingBox.right, rotation, size, absoluteSize);
+        detectedObject.boundingBox.right,
+        rotation,
+        size,
+        absoluteSize,
+      );
       final bottom = translateY(
-          detectedObject.boundingBox.bottom, rotation, size, absoluteSize);
+        detectedObject.boundingBox.bottom,
+        rotation,
+        size,
+        absoluteSize,
+      );
 
       canvas.drawRect(
         Rect.fromLTRB(left, top, right, bottom),
@@ -54,9 +79,11 @@ class ObjectDetectorPainter extends CustomPainter {
 
       canvas.drawParagraph(
         builder.build()
-          ..layout(ParagraphConstraints(
-            width: right - left,
-          )),
+          ..layout(
+            ParagraphConstraints(
+              width: right - left,
+            ),
+          ),
         Offset(left, top),
       );
     }
