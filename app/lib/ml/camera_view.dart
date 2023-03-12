@@ -116,10 +116,8 @@ class _CameraViewState extends State<CameraView> {
     }
     final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize = Size(
-      image.width.toDouble(),
-      image.height.toDouble(),
-    );
+    final Size imageSize =
+        Size(image.width.toDouble(), image.height.toDouble());
 
     final imageRotation = InputImageRotationValue.fromRawValue(
       appCameraController.cameras.first.sensorOrientation,
@@ -139,19 +137,17 @@ class _CameraViewState extends State<CameraView> {
         )
         .toList();
 
-    if (inputImageFormat == null) return;
+      if (inputImageFormat == null) return;
 
-    final inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
-    );
+      final inputImageData = InputImageData(
+        size: imageSize,
+        imageRotation: imageRotation,
+        inputImageFormat: inputImageFormat,
+        planeData: planeData,
+      );
 
-    final inputImage = InputImage.fromBytes(
-      bytes: bytes,
-      inputImageData: inputImageData,
-    );
+      final inputImage =
+          InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
 
     widget.handleImage(inputImage);
   }

@@ -1,3 +1,4 @@
+import 'package:app/ml/captured_image.dart';
 import 'package:app/ml/object_detector.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/utils/camera.dart';
@@ -33,7 +34,11 @@ class Blinder extends StatelessWidget {
         // routes: AppRouter.routes,
         // home: AppRouter.initialScreen,
         // initialRoute: AppRouter.mainVoicePath,
-        home: ObjectDetectorView(),
+        routes: {
+          '/': (context) => ObjectDetectorView(),
+          '/captured_image': (context) => const CapturedImageScreen(),
+        },
+        initialRoute: '/',
       ),
     );
   }
