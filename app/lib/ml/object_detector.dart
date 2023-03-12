@@ -33,6 +33,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   void dispose() {
     _canProcess = false;
     _objectDetector.close();
+
     super.dispose();
   }
 
@@ -40,6 +41,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   Widget build(BuildContext context) {
     return CameraView(
       title: "이거 되냐?",
+      text: _text,
       customPaint: _customPaint,
       onImage: (inputImage) {
         processImage(inputImage);
@@ -52,7 +54,8 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   ) async {
     print('Set detector in mode: $mode');
 
-    const path = 'assets/ml/menu-detector.tflite';
+    // const path = 'assets/ml/menu-detector.tflite';
+    const path = 'assets/ml/test.tflite';
     final modelPath = await _getModel(path);
     final options = LocalObjectDetectorOptions(
       mode: mode,
@@ -65,14 +68,19 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
     _canProcess = true;
   }
 
-  Future<void> processImage(InputImage inputImage) async {
+  Future<void> processImage(
+    InputImage inputImage,
+  ) async {
     if (!_canProcess) return;
+
     if (_isBusy) return;
+
     _isBusy = true;
     setState(() {
       _text = '';
     });
     final objects = await _objectDetector.processImage(inputImage);
+
     if (inputImage.inputImageData?.size != null &&
         inputImage.inputImageData?.imageRotation != null) {
       final painter = ObjectDetectorPainter(
@@ -80,7 +88,9 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
         inputImage.inputImageData!.imageRotation,
         inputImage.inputImageData!.size,
       );
-      _customPaint = CustomPaint(painter: painter);
+      _customPaint = CustomPaint(
+        painter: painter,
+      );
     } else {
       String text = 'Objects found: ${objects.length}\n\n';
       for (final object in objects) {
@@ -110,8 +120,12 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
 
     if (!await file.exists()) {
       final byteData = await rootBundle.load(assetPath);
-      await file.writeAsBytes(byteData.buffer
-          .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      await file.writeAsBytes(
+        byteData.buffer.asUint8List(
+          byteData.offsetInBytes,
+          byteData.lengthInBytes,
+        ),
+      );
     }
 
     return file.path;
