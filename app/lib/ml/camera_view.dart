@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:app/utils/camera.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -7,20 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 class CameraView extends StatefulWidget {
-  const CameraView({
-    Key? key,
-    required this.title,
-    required this.customPaint,
-    required this.onImage,
-    this.text,
-    this.initialDirection = CameraLensDirection.back,
-  }) : super(key: key);
-
-  final String title;
   final CustomPaint? customPaint;
-  final String? text;
-  final Function(InputImage inputImage) onImage;
+  final Future<void> Function(InputImage videoImage) handleImage;
   final CameraLensDirection initialDirection;
+
+  const CameraView({
+    required this.customPaint,
+    required this.handleImage,
+    this.initialDirection = CameraLensDirection.back,
+  });
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -33,41 +26,20 @@ class _CameraViewState extends State<CameraView> {
   void initState() {
     super.initState();
 
-    _startLiveFeed();
+    _startVideo();
   }
 
   @override
   void dispose() {
-    _stopLiveFeed();
+    _stopVideo();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
       body: _liveFeedWidget(),
-      floatingActionButton: _floatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
-
-  Widget? _floatingActionButton() {
-    if (appCameraController.cameras.length == 1) return null;
-    return SizedBox(
-      height: 70.0,
-      width: 70.0,
-      child: FloatingActionButton(
-        onPressed: () {},
-        child: Icon(
-          Platform.isIOS
-              ? Icons.flip_camera_ios_outlined
-              : Icons.flip_camera_android_outlined,
-          size: 40,
-        ),
-      ),
     );
   }
 
@@ -97,63 +69,32 @@ class _CameraViewState extends State<CameraView> {
             ),
           ),
           if (widget.customPaint != null) widget.customPaint!,
-          Positioned(
-            bottom: 100,
-            left: 50,
-            right: 50,
-            child: Slider(
-              value: zoomLevel,
-              min: minZoomLevel,
-              max: maxZoomLevel,
-              onChanged: (newSliderValue) {
-                setState(() {
-                  zoomLevel = newSliderValue;
-                  appCameraController.controller.setZoomLevel(zoomLevel);
-                });
-              },
-              divisions: (maxZoomLevel - 1).toInt() < 1
-                  ? null
-                  : (maxZoomLevel - 1).toInt(),
-            ),
-          )
         ],
       ),
     );
   }
 
-  Future<void> _startLiveFeed() async {
+  Future<void> _startVideo() async {
     appCameraController.initializeCamera(
       (_) async {
         if (mounted) {
-          await appCameraController.controller.getMinZoomLevel().then(
-            (value) {
-              zoomLevel = value;
-              minZoomLevel = value;
-            },
-          );
-          await appCameraController.controller.getMaxZoomLevel().then(
-            (value) {
-              maxZoomLevel = value;
-            },
-          );
-
           await appCameraController.controller.startImageStream(
-            _processCameraImage,
+            _processVideoImage,
           );
         }
       },
     );
   }
 
-  Future<void> _stopLiveFeed() async {
+  Future<void> _stopVideo() async {
     await appCameraController.controller.stopImageStream();
+
     appCameraController.destroyController();
   }
 
-  void _processCameraImage(CameraImage image) {
-    InputImageFormat? inputImageFormat;
-
+  void _processVideoImage(CameraImage image) {
     final WriteBuffer allBytes = WriteBuffer();
+
     for (final Plane plane in image.planes) {
       allBytes.putUint8List(plane.bytes);
     }
@@ -169,23 +110,18 @@ class _CameraViewState extends State<CameraView> {
     );
     if (imageRotation == null) return;
 
-    if (image.format.raw is int) {
-      inputImageFormat =
-          InputImageFormatValue.fromRawValue(image.format.raw as int);
-    } else {
-      inputImageFormat =
-          InputImageFormatValue.fromRawValue(image.format.raw as int);
-    }
+    final InputImageFormat? inputImageFormat =
+        InputImageFormatValue.fromRawValue(image.format.raw as int);
 
-    final planeData = image.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
+    final planeData = image.planes
+        .map(
+          (Plane plane) => InputImagePlaneMetadata(
+            bytesPerRow: plane.bytesPerRow,
+            height: plane.height,
+            width: plane.width,
+          ),
+        )
+        .toList();
 
     if (inputImageFormat == null) return;
 
@@ -201,6 +137,6 @@ class _CameraViewState extends State<CameraView> {
       inputImageData: inputImageData,
     );
 
-    widget.onImage(inputImage);
+    widget.handleImage(inputImage);
   }
 }
