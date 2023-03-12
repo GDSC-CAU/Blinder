@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/utils/camera.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -20,13 +22,27 @@ class CameraView extends StatefulWidget {
 }
 
 class _CameraViewState extends State<CameraView> {
-  double zoomLevel = 0.0, minZoomLevel = 0.0, maxZoomLevel = 0.0;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
 
     _startVideo();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (true) {
+          _timer?.cancel();
+          Timer(
+            const Duration(seconds: 1),
+            () {
+              Navigator.of(context).pushNamed("/captured_image");
+            },
+          );
+        }
+      });
+    });
   }
 
   @override
