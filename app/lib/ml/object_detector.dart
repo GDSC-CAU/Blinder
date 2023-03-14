@@ -49,7 +49,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   Widget build(BuildContext context) {
     return CameraView(
       customPaint: _customPaint,
-      handleImage: (videoImage) async {
+      handleImage: (videoImage) {
         detectMenuBoard(videoImage);
       },
     );
@@ -120,9 +120,11 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
           rotation: inputImage.inputImageData!.imageRotation,
           absoluteSize: inputImage.inputImageData!.size,
         );
-        _customPaint = CustomPaint(
-          painter: painter,
-        );
+        setState(() {
+          _customPaint = CustomPaint(
+            painter: painter,
+          );
+        });
       }
     } catch (mlError) {
       print(mlError);

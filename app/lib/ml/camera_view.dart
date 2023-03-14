@@ -8,7 +8,7 @@ import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 class CameraView extends StatefulWidget {
   final CustomPaint? customPaint;
-  final Future<void> Function(InputImage videoImage) handleImage;
+  final void Function(InputImage videoImage) handleImage;
   final CameraLensDirection initialDirection;
 
   const CameraView({
@@ -23,13 +23,13 @@ class CameraView extends StatefulWidget {
 
 class _CameraViewState extends State<CameraView> {
   Timer? _timer;
+  bool _isCameraInitialized = false;
 
   @override
   void initState() {
     super.initState();
 
     _startVideo();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (true) {
@@ -60,7 +60,7 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Widget _liveFeedWidget() {
-    if (appCameraController.controller.value.isInitialized == false) {
+    if (_isCameraInitialized == false) {
       return Container();
     }
 
@@ -90,13 +90,16 @@ class _CameraViewState extends State<CameraView> {
     );
   }
 
-  Future<void> _startVideo() async {
+  void _startVideo() {
     appCameraController.initializeCamera(
       (_) async {
         if (mounted) {
           await appCameraController.controller.startImageStream(
             _processVideoImage,
           );
+          setState(() {
+            _isCameraInitialized = true;
+          });
         }
       },
     );
@@ -116,8 +119,10 @@ class _CameraViewState extends State<CameraView> {
     }
     final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
+    final Size imageSize = Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
 
     final imageRotation = InputImageRotationValue.fromRawValue(
       appCameraController.cameras.first.sensorOrientation,
@@ -137,17 +142,19 @@ class _CameraViewState extends State<CameraView> {
         )
         .toList();
 
-      if (inputImageFormat == null) return;
+    if (inputImageFormat == null) return;
 
-      final inputImageData = InputImageData(
-        size: imageSize,
-        imageRotation: imageRotation,
-        inputImageFormat: inputImageFormat,
-        planeData: planeData,
-      );
+    final inputImageData = InputImageData(
+      size: imageSize,
+      imageRotation: imageRotation,
+      inputImageFormat: inputImageFormat,
+      planeData: planeData,
+    );
 
-      final inputImage =
-          InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
+    final inputImage = InputImage.fromBytes(
+      bytes: bytes,
+      inputImageData: inputImageData,
+    );
 
     widget.handleImage(inputImage);
   }

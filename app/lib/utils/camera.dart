@@ -84,44 +84,41 @@ class AppCameraController {
     status = CameraStatus.destroyed;
   }
 
-  void initializeCamera(FutureOr<dynamic> Function(void) initializer) {
-    if (status == CameraStatus.destroyed) {
-      status = CameraStatus.loading;
-      controller = _createCameraController(
-        cameras: cameras,
-        resolution: resolution,
-      );
-    }
+  void initializeCamera(
+    FutureOr<dynamic> Function(void) initializer,
+  ) {
+    try {
+      if (status == CameraStatus.destroyed) {
+        status = CameraStatus.loading;
+        controller = _createCameraController(
+          cameras: cameras,
+          resolution: resolution,
+        );
+      }
+      controller.initialize().then(initializer);
+      status = CameraStatus.success;
+    } catch (error) {
+      status = CameraStatus.error;
 
-    controller.initialize().then(
-      (_) {
-        initializer(_);
-        status = CameraStatus.success;
-      },
-    ).catchError(
-      (Object error) {
-        status = CameraStatus.error;
-
-        if (error is CameraException) {
-          switch (error.code) {
-            case 'CameraAccessDenied':
-              print("CAMERA: CameraAccessDenied, ${error.code}");
-              break;
-            // ios
-            case "CameraAccessDeniedWithoutPrompt":
-              print("CAMERA: CameraAccessDeniedWithoutPrompt, ${error.code}");
-              break;
-            // ios
-            case "CameraAccessRestricted":
-              print("CAMERA: CameraAccessRestricted");
-              break;
-            // another error
-            default:
-              throw Exception("Unknown error: ${error.code}");
-          }
+      if (error is CameraException) {
+        switch (error.code) {
+          case 'CameraAccessDenied':
+            print("CAMERA: CameraAccessDenied, ${error.code}");
+            break;
+          // ios
+          case "CameraAccessDeniedWithoutPrompt":
+            print("CAMERA: CameraAccessDeniedWithoutPrompt, ${error.code}");
+            break;
+          // ios
+          case "CameraAccessRestricted":
+            print("CAMERA: CameraAccessRestricted");
+            break;
+          // another error
+          default:
+            throw Exception("Unknown error: ${error.code}");
         }
-      },
-    );
+      }
+    }
   }
 }
 
