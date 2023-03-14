@@ -122,7 +122,7 @@ class AppCameraController {
   }
 }
 
-late AppCameraController appCameraController;
+late final AppCameraController appCameraController;
 
 Future<void> initializeCameraInstance({
   required ResolutionPreset resolution,
