@@ -6,43 +6,36 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
-class CameraView extends StatefulWidget {
+class ObjectDetectorCamera extends StatefulWidget {
   final CustomPaint? customPaint;
-  final void Function(InputImage videoImage) handleImage;
+  final void Function(InputImage? videoImage) handleVideoImage;
   final CameraLensDirection initialDirection;
 
-  const CameraView({
+  /// execution `ML` model, in certain frame rate
+  ///
+  /// ex) `3`: `60`FPS/s / `3` = `20`FPS/s
+  final int executionFrameRate;
+
+  const ObjectDetectorCamera({
     required this.customPaint,
-    required this.handleImage,
+    required this.handleVideoImage,
+    required this.executionFrameRate,
     this.initialDirection = CameraLensDirection.back,
   });
 
   @override
-  State<CameraView> createState() => _CameraViewState();
+  State<ObjectDetectorCamera> createState() => _ObjectDetectorCameraState();
 }
 
-class _CameraViewState extends State<CameraView> {
-  Timer? _timer;
+class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
   bool _isCameraInitialized = false;
+  int _videoStreamFrameCount = 0;
 
   @override
   void initState() {
     super.initState();
 
     _startVideo();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (true) {
-          _timer?.cancel();
-          Timer(
-            const Duration(seconds: 1),
-            () {
-              Navigator.of(context).pushNamed("/captured_image");
-            },
-          );
-        }
-      });
-    });
   }
 
   @override
@@ -55,11 +48,11 @@ class _CameraViewState extends State<CameraView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _liveFeedWidget(),
+      body: _videoView(),
     );
   }
 
-  Widget _liveFeedWidget() {
+  Widget _videoView() {
     if (_isCameraInitialized == false) {
       return Container();
     }
@@ -75,7 +68,7 @@ class _CameraViewState extends State<CameraView> {
       color: Colors.black,
       child: Stack(
         fit: StackFit.expand,
-        children: <Widget>[
+        children: [
           Transform.scale(
             scale: scale,
             child: Center(
@@ -112,6 +105,15 @@ class _CameraViewState extends State<CameraView> {
   }
 
   void _processVideoImage(CameraImage image) {
+    _videoStreamFrameCount += 1;
+
+    final isSkipCurrentFrame =
+        _videoStreamFrameCount % widget.executionFrameRate != 0;
+    if (isSkipCurrentFrame) {
+      widget.handleVideoImage(null);
+      return;
+    }
+
     final WriteBuffer allBytes = WriteBuffer();
 
     for (final Plane plane in image.planes) {
@@ -127,7 +129,10 @@ class _CameraViewState extends State<CameraView> {
     final imageRotation = InputImageRotationValue.fromRawValue(
       appCameraController.cameras.first.sensorOrientation,
     );
-    if (imageRotation == null) return;
+    if (imageRotation == null) {
+      widget.handleVideoImage(null);
+      return;
+    }
 
     final InputImageFormat? inputImageFormat =
         InputImageFormatValue.fromRawValue(image.format.raw as int);
@@ -142,7 +147,10 @@ class _CameraViewState extends State<CameraView> {
         )
         .toList();
 
-    if (inputImageFormat == null) return;
+    if (inputImageFormat == null) {
+      widget.handleVideoImage(null);
+      return;
+    }
 
     final inputImageData = InputImageData(
       size: imageSize,
@@ -156,6 +164,8 @@ class _CameraViewState extends State<CameraView> {
       inputImageData: inputImageData,
     );
 
-    widget.handleImage(inputImage);
+    widget.handleVideoImage(inputImage);
+
+    _videoStreamFrameCount = 0;
   }
 }

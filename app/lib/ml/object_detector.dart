@@ -1,6 +1,6 @@
 import 'dart:io' as io;
 
-import 'package:app/ml/camera_view.dart';
+import 'package:app/ml/object_detector_camera.dart';
 import 'package:app/ml/object_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -47,15 +47,18 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
 
   @override
   Widget build(BuildContext context) {
-    return CameraView(
-      customPaint: _customPaint,
-      handleImage: (videoImage) {
-        detectMenuBoard(videoImage);
+    return ObjectDetectorCamera(
+      handleVideoImage: (videoImage) {
+        if (videoImage != null) {
+          detectMenuBoard(videoImage);
+        }
       },
+      customPaint: _customPaint,
+      executionFrameRate: 3,
     );
   }
 
-  Future<String> _getModelFromAsset(String assetPath) async {
+  Future<String> _getModelPath(String assetPath) async {
     if (io.Platform.isAndroid) {
       return 'flutter_assets/$assetPath';
     }
@@ -82,7 +85,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
 
   Future<void> _initializeMenuBoardDetector() async {
     const modelSourcePath = 'assets/ml/menu-detector.tflite';
-    final modelPath = await _getModelFromAsset(modelSourcePath);
+    final modelPath = await _getModelPath(modelSourcePath);
 
     final options = LocalObjectDetectorOptions(
       mode: DetectionMode.stream,
@@ -119,6 +122,8 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
           detectedObjectList: recognizedObjectList,
           rotation: inputImage.inputImageData!.imageRotation,
           absoluteSize: inputImage.inputImageData!.size,
+          color: Colors.black,
+          strokeWidth: 2,
         );
         setState(() {
           _customPaint = CustomPaint(
