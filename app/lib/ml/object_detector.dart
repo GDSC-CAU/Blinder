@@ -49,9 +49,8 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   Widget build(BuildContext context) {
     return ObjectDetectorCamera(
       handleVideoImage: (videoImage) {
-        if (videoImage != null) {
-          detectMenuBoard(videoImage);
-        }
+        if (videoImage == null) return;
+        detectMenuBoard(videoImage);
       },
       customPaint: _customPaint,
       executionFrameRate: 3,
@@ -118,16 +117,24 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
           inputImage.inputImageData?.imageRotation != null;
 
       if (isInputImageExist) {
-        final painter = ObjectDetectorPainter(
-          detectedObjectList: recognizedObjectList,
+        const targetLabel = "menu_board";
+        final menuBoardPainter = ObjectDetectorPainter(
+          detectedObjectList: recognizedObjectList
+              .where(
+                (element) => element.labels.any(
+                  (label) => label.text == targetLabel,
+                ),
+              )
+              .toList(),
           rotation: inputImage.inputImageData!.imageRotation,
           absoluteSize: inputImage.inputImageData!.size,
-          color: Colors.black,
-          strokeWidth: 2,
+          color: Colors.green.shade300,
+          strokeWidth: 5,
         );
+
         setState(() {
           _customPaint = CustomPaint(
-            painter: painter,
+            painter: menuBoardPainter,
           );
         });
       }
