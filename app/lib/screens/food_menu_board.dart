@@ -88,6 +88,13 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
       totalItemCount: currentFoodMenu.length,
     );
 
+    final menuButtonHeight = MediaQuery.of(context).size.width / 2;
+    const totalGridGap = 5 * 4;
+    final bottomButtonHeight = MediaQuery.of(context).size.height -
+        menuButtonHeight * 3 -
+        totalGridGap -
+        AppBar().preferredSize.height;
+
     return AppScaffold(
       body: Column(
         children: [
@@ -95,10 +102,10 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
             child: Padding(
               padding: const EdgeInsets.all(5),
               child: GridView.count(
-                childAspectRatio: 1 / .975,
                 mainAxisSpacing: 5,
                 crossAxisSpacing: 5,
                 crossAxisCount: 2,
+                // childAspectRatio: 1 / 1,
                 clipBehavior: Clip.antiAlias,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
@@ -111,7 +118,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
                           Text(
                             foodMenu.name,
                             style: const TextStyle(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -132,21 +139,25 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Button(
-                text: _currentPageCount == 1 ? "첫번째 메뉴페이지" : "이전",
-                onPressed: _decreasePageCount,
-                backgroundColor: Colors.red.shade500,
-                foregroundColor: Palette.$white,
-              ),
-              Button(
-                text: _currentPageCount == _maximumCount ? "마지막 메뉴페이지" : "다음",
-                onPressed: _increasePageCount,
-                backgroundColor: Colors.green.shade500,
-                foregroundColor: Palette.$white,
-              ),
-            ],
+          SizedBox(
+            height: bottomButtonHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Button(
+                  text: _currentPageCount == 1 ? "첫번째 메뉴페이지" : "이전",
+                  onPressed: _decreasePageCount,
+                  backgroundColor: Colors.red.shade500,
+                  foregroundColor: Palette.$white,
+                ),
+                Button(
+                  text: _currentPageCount == _maximumCount ? "마지막 메뉴페이지" : "다음",
+                  onPressed: _increasePageCount,
+                  backgroundColor: Colors.green.shade500,
+                  foregroundColor: Palette.$white,
+                ),
+              ],
+            ),
           )
         ],
       ),
@@ -186,15 +197,14 @@ class Button extends StatelessWidget {
         splashFactory: NoSplash.splashFactory,
         foregroundColor: foregroundColor,
         enableFeedback: true,
-        maximumSize: Size(halfOfScreenSize, 200),
-        fixedSize: Size(halfOfScreenSize, 200),
         shape: const BeveledRectangleBorder(),
+        fixedSize: Size(halfOfScreenSize, halfOfScreenSize),
       ),
       child: child ??
           Text(
             text,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
             ),
           ),
