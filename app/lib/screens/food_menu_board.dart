@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/providers/food_menu_provider.dart';
@@ -23,6 +25,10 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
     super.dispose();
   }
 
+  static const _initialParse =
+      "총 6개의 음식 메뉴가 가로 2줄, 세로 3줄, 창문형으로 배치되어있습니다. 하단에는 페이지를 이동할 수 있는 버튼, 2개가 있습니다. 하단의 버튼들을 눌러서 메뉴를 살펴보세요!";
+
+  bool isFirstAccess = true;
   int _currentPageCount = 1;
   int? _maximumCount;
 
@@ -89,77 +95,112 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
     );
 
     final menuButtonHeight = MediaQuery.of(context).size.width / 2;
-    const totalGridGap = 5 * 4;
-    final bottomButtonHeight = MediaQuery.of(context).size.height -
-        menuButtonHeight * 3 -
-        totalGridGap -
-        AppBar().preferredSize.height;
+    const totalGridGap = 5;
+    final screenHeight = Platform.isAndroid
+        ? AppBar().preferredSize.height
+        : AppBar().preferredSize.height + MediaQuery.of(context).padding.top;
+    final gridMargin = Platform.isAndroid ? totalGridGap * 4 : 0;
+    final bottomButtonHeight =
+        (MediaQuery.of(context).size.height - screenHeight) -
+            3 * menuButtonHeight -
+            gridMargin;
 
-    return AppScaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(5),
-              child: GridView.count(
-                mainAxisSpacing: 5,
-                crossAxisSpacing: 5,
-                crossAxisCount: 2,
-                // childAspectRatio: 1 / 1,
-                clipBehavior: Clip.antiAlias,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  for (final foodMenu in currentPageFoodMenuList)
-                    Button(
-                      text: "",
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            foodMenu.name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
+    final isFirst = _currentPageCount == 1;
+    final isLast = _currentPageCount == _maximumCount;
+
+    return FutureBuilder<void>(
+      future: (() async {
+        final menuOverallText =
+            "$_currentPageCount페이지 메뉴는 다음과 같습니다. ${currentPageFoodMenuList.map((e) => e.name).join(", ")}";
+        final String text = isFirstAccess
+            ? "$_initialParse, $menuOverallText"
+            : menuOverallText;
+        await ttsController.speak(text);
+      })(),
+      builder: (context, snapshot) => AppScaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(5),
+                child: GridView.count(
+                  mainAxisSpacing: 5,
+                  crossAxisSpacing: 5,
+                  crossAxisCount: 2,
+                  clipBehavior: Clip.antiAlias,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    for (final foodMenu in currentPageFoodMenuList)
+                      InfoContainer(
+                        backgroundColor: Palette.$brown100,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              foodMenu.name,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            foodMenu.price,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
+                            const SizedBox(
+                              height: 5,
                             ),
-                          ),
-                        ],
+                            Text(
+                              foodMenu.price,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          SizedBox(
-            height: bottomButtonHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Button(
-                  text: _currentPageCount == 1 ? "첫번째 메뉴페이지" : "이전",
-                  onPressed: _decreasePageCount,
-                  backgroundColor: Colors.red.shade500,
-                  foregroundColor: Palette.$white,
-                ),
-                Button(
-                  text: _currentPageCount == _maximumCount ? "마지막 메뉴페이지" : "다음",
-                  onPressed: _increasePageCount,
-                  backgroundColor: Colors.green.shade500,
-                  foregroundColor: Palette.$white,
-                ),
-              ],
-            ),
-          )
-        ],
+            SizedBox(
+              height: bottomButtonHeight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Button(
+                    text: isFirst ? "첫번째 메뉴페이지" : "이전",
+                    onPressed: () async {
+                      if (isFirst) {
+                        setState(() {
+                          isFirstAccess = false;
+                        });
+                      }
+                      _decreasePageCount();
+                      await ttsController.speak(
+                        "${isFirst ? "첫번째" : _currentPageCount} 페이지 입니다.",
+                      );
+                    },
+                    backgroundColor: Colors.red.shade500,
+                    foregroundColor: Palette.$white,
+                  ),
+                  Button(
+                    text: isLast ? "마지막 메뉴페이지" : "다음",
+                    onPressed: () async {
+                      if (isFirst) {
+                        setState(() {
+                          isFirstAccess = false;
+                        });
+                      }
+                      _increasePageCount();
+                      await ttsController.speak(
+                          "${isLast ? "마지막, $_currentPageCount" : _currentPageCount} 페이지입니다.");
+                    },
+                    backgroundColor: Colors.green.shade500,
+                    foregroundColor: Palette.$white,
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -167,7 +208,6 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
 
 class Button extends StatelessWidget {
   final String text;
-  final String? ttsText;
   final Widget? child;
   final Color? backgroundColor;
   final Color? foregroundColor;
@@ -177,7 +217,6 @@ class Button extends StatelessWidget {
     super.key,
     required this.text,
     this.onPressed,
-    this.ttsText,
     this.child,
     this.backgroundColor = Palette.$brown700,
     this.foregroundColor = Palette.$brown100,
@@ -187,27 +226,57 @@ class Button extends StatelessWidget {
   Widget build(BuildContext context) {
     final halfOfScreenSize = MediaQuery.of(context).size.width / 2;
     return ElevatedButton(
-      onPressed: () {
-        if (ttsText != null) ttsController.speak(ttsText!);
+      onPressed: () async {
         if (onPressed != null) onPressed!();
       },
       style: ElevatedButton.styleFrom(
-        alignment: Alignment.center,
-        backgroundColor: backgroundColor,
-        splashFactory: NoSplash.splashFactory,
-        foregroundColor: foregroundColor,
         enableFeedback: true,
+        alignment: Alignment.center,
         shape: const BeveledRectangleBorder(),
+        backgroundColor: backgroundColor,
+        foregroundColor: foregroundColor,
+        splashFactory: NoSplash.splashFactory,
         fixedSize: Size(halfOfScreenSize, halfOfScreenSize),
       ),
       child: child ??
           Text(
             text,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
           ),
+    );
+  }
+}
+
+class InfoContainer extends StatelessWidget {
+  final Widget child;
+  final Color? backgroundColor;
+
+  const InfoContainer({
+    super.key,
+    required this.child,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final halfOfScreenSize = MediaQuery.of(context).size.width / 2;
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.zero),
+        color: backgroundColor,
+        border: backgroundColor != null
+            ? Border.all(
+                color: backgroundColor!,
+                width: 2,
+              )
+            : null,
+      ),
+      width: halfOfScreenSize,
+      child: child,
     );
   }
 }
