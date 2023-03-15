@@ -1,6 +1,3 @@
-import 'dart:ui';
-import 'dart:ui' as ui;
-
 import 'package:app/ml/coordinates_translator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
@@ -28,29 +25,7 @@ class ObjectDetectorPainter extends CustomPainter {
       ..strokeWidth = _strokeWidth
       ..color = _color;
 
-    final Paint background = Paint()..color = const Color(0x99000000);
-
     for (final DetectedObject detectedObject in detectedObjectList) {
-      final ParagraphBuilder builder = ParagraphBuilder(
-        ParagraphStyle(
-          textAlign: TextAlign.left,
-          fontSize: 16,
-          textDirection: TextDirection.ltr,
-        ),
-      );
-      builder.pushStyle(
-        ui.TextStyle(
-          color: Colors.lightGreenAccent,
-          background: background,
-        ),
-      );
-
-      for (final Label label in detectedObject.labels) {
-        builder.addText('${label.text} ${label.confidence}\n');
-      }
-
-      builder.pop();
-
       final left = CoordTranslator.translateX(
         detectedObject.boundingBox.left,
         rotation,
@@ -79,16 +54,6 @@ class ObjectDetectorPainter extends CustomPainter {
       canvas.drawRect(
         Rect.fromLTRB(left, top, right, bottom),
         paint,
-      );
-
-      canvas.drawParagraph(
-        builder.build()
-          ..layout(
-            ParagraphConstraints(
-              width: right - left,
-            ),
-          ),
-        Offset(left, top),
       );
     }
   }
