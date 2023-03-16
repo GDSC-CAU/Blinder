@@ -1,29 +1,32 @@
 import 'package:app/screens/food_menu_board.dart';
-import 'package:app/screens/food_scan_screen.dart';
+import 'package:app/screens/food_menu_detect.dart';
 import 'package:flutter/material.dart';
 
 enum RouterPath {
   foodMenuBoard,
-  foodMenuScan,
+  foodMenuDetect,
 }
 
 class AppRouter {
   const AppRouter();
 
-  static const String foodMenuScanPath = "/menu-scan";
-  static const String foodMenuPath = "/food-menu";
+  static const String foodMenuDetectPath = "/food-menu-detect";
+  static const String foodMenuBoardPath = "/food-menu-board";
 
   static const Map<RouterPath, String> routePath = {
-    RouterPath.foodMenuScan: foodMenuScanPath,
-    RouterPath.foodMenuBoard: foodMenuPath,
+    RouterPath.foodMenuDetect: foodMenuDetectPath,
+    RouterPath.foodMenuBoard: foodMenuBoardPath,
   };
 
-  static const Widget initialScreen = FoodScanScreen();
+  static Widget initialScreen = const FoodMenuDetect(
+    capturingDuration: 2,
+    executionFrameRate: 3,
+  );
 
   static final Map<String, Widget Function(BuildContext)> routes = {
-    routePath[RouterPath.foodMenuScan] ?? foodMenuScanPath: (context) =>
-        const FoodScanScreen(),
-    routePath[RouterPath.foodMenuBoard] ?? foodMenuPath: (context) =>
+    routePath[RouterPath.foodMenuDetect] ?? foodMenuDetectPath: (context) =>
+        initialScreen,
+    routePath[RouterPath.foodMenuBoard] ?? foodMenuBoardPath: (context) =>
         const FoodMenuBoard(),
   };
 

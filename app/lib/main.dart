@@ -32,7 +32,7 @@ class Blinder extends StatelessWidget {
         title: "Blinder",
         routes: AppRouter.routes,
         home: AppRouter.initialScreen,
-        initialRoute: AppRouter.foodMenuScanPath,
+        initialRoute: AppRouter.foodMenuDetectPath,
       ),
     );
   }
