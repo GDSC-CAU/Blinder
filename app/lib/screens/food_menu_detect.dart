@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io' as io;
 
+import 'package:app/core/menu_engine.dart';
 import 'package:app/ml/object_detector_camera.dart';
 import 'package:app/ml/object_painter.dart';
+import 'package:app/providers/food_menu_provider.dart';
 import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:camera/camera.dart';
@@ -11,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 
 enum ObjectDetectorState {
   beforeInitialized,
@@ -18,7 +21,7 @@ enum ObjectDetectorState {
   error,
 }
 
-class ObjectDetectorView extends StatefulWidget {
+class FoodMenuDetect extends StatefulWidget {
   /// execution `ML` model, in certain frame rate
   ///
   /// ex) `3`: `60`FPS/s / `3` = `20`FPS/s
@@ -27,16 +30,18 @@ class ObjectDetectorView extends StatefulWidget {
   /// Target capture and retention time conditions
   final int capturingDuration;
 
-  const ObjectDetectorView({
+  const FoodMenuDetect({
     required this.executionFrameRate,
     required this.capturingDuration,
   });
 
   @override
-  State<ObjectDetectorView> createState() => _ObjectDetectorView();
+  State<FoodMenuDetect> createState() => _FoodMenuDetect();
 }
 
-class _ObjectDetectorView extends State<ObjectDetectorView> {
+class _FoodMenuDetect extends State<FoodMenuDetect> {
+  final menuEngine = MenuEngine();
+
   late final ObjectDetector _objectDetector;
 
   ObjectDetectorState _objectDetectorState =
@@ -135,19 +140,23 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
     _objectDetectorState = ObjectDetectorState.initialized;
   }
 
-  Future<void> _captureImage(
+  Future<void> _saveFoodMenuFromCapturedImage(
     BuildContext context,
   ) async {
     if (AppCameraController.status == CameraStatus.initialized) {
+      final menuController = Provider.of<FoodMenuProvider>(context);
+
       final XFile capturedImage =
           await appCameraController.controller.takePicture();
+
+      await menuEngine.parse(capturedImage.path);
+      menuController.updateFoodMenu(menuEngine.foodMenu);
 
       await _objectDetector.close();
 
       AppRouter.move(
         context,
         to: RouterPath.foodMenuBoard,
-        arguments: capturedImage.path,
       );
     }
   }
@@ -161,7 +170,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
     await detectMenuBoard(videoImage);
 
     if (_isFullyCaptured) {
-      await _captureImage(context);
+      await _saveFoodMenuFromCapturedImage(context);
     }
   }
 
