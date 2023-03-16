@@ -35,7 +35,10 @@ class Blinder extends StatelessWidget {
         // home: AppRouter.initialScreen,
         // initialRoute: AppRouter.mainVoicePath,
         routes: {
-          '/': (context) => ObjectDetectorView(),
+          '/': (context) => const ObjectDetectorView(
+                executionFrameRate: 3,
+                capturingDuration: 2,
+              ),
           '/captured_image': (context) => const CapturedImageScreen(),
         },
         initialRoute: '/',
