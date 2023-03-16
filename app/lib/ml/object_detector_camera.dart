@@ -11,9 +11,6 @@ class ObjectDetectorCamera extends StatefulWidget {
   final void Function(InputImage? videoImage) handleVideoImage;
   final CameraLensDirection initialDirection;
 
-  /// execution `ML` model, in certain frame rate
-  ///
-  /// ex) `3`: `60`FPS/s / `3` = `20`FPS/s
   final int executionFrameRate;
 
   const ObjectDetectorCamera({
