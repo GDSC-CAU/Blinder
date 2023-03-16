@@ -7,7 +7,7 @@ class FoodMap implements Model<FoodMap> {
   List<FoodMenu> menu = [];
 
   @override
-  void set(JsonMap jsonMap) {
+  void set(jsonMap) {
     category = jsonMap["category"] as String;
     _foodMenuFactory.serializeList(jsonMap["menu"] as List<JsonMap>);
     menu = _foodMenuFactory.dataList;

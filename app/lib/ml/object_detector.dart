@@ -146,7 +146,7 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
 
       AppRouter.move(
         context,
-        to: RouterPath.foodMenu,
+        to: RouterPath.foodMenuBoard,
         arguments: capturedImage.path,
       );
     }

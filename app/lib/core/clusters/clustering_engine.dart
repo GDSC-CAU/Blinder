@@ -117,10 +117,10 @@ class ClusteringEngine {
   static const defaultNumberOfCorePointCount = 3;
 
   /// `Average` of menu blocks height
-  late final num blockHeightAvg;
+  late num blockHeightAvg;
 
   /// `Average` of menu blocks width
-  late final num blockWidthAvg;
+  late num blockWidthAvg;
 
   /// Clustering target
   ///
@@ -183,6 +183,15 @@ class ClusteringEngine {
     );
   }
 
+  void _updateBlockGeometryStatics(MenuBlockList targetMenuBlockList) {
+    blockHeightAvg = Statics.avg(
+      targetMenuBlockList.map((e) => e.block.height).toList(),
+    ).toInt();
+    blockWidthAvg = Statics.avg(
+      targetMenuBlockList.map((e) => e.block.width).toList(),
+    ).toInt();
+  }
+
   ClusteringEngine({
     required MenuBlockList menuBlockList,
     this.maximumPointGapRatio,
@@ -191,15 +200,8 @@ class ClusteringEngine {
     this.scanRectSizeRatio,
     this.numberOfCorePointCondition,
   }) {
-    blockHeightAvg = Statics.avg(
-      menuBlockList.map((e) => e.block.height).toList(),
-    ).toInt();
-    blockWidthAvg = Statics.avg(
-      menuBlockList.map((e) => e.block.width).toList(),
-    ).toInt();
-
     _originalMenuBlockList = menuBlockList;
-
+    _updateBlockGeometryStatics(menuBlockList);
     _initializeClusteringEngines();
   }
 
@@ -300,5 +302,17 @@ class ClusteringEngine {
   void clearClusteredResult() {
     clusterTargetMenuBlockList = _originalMenuBlockList;
     menuClusters.clear();
+
+    _$dbscan.updateClusterTarget([]);
+    _$dbscan.updateClusterTarget([]);
+  }
+
+  void updateMenuBlockList(MenuBlockList newMenuBlockList) {
+    if (_originalMenuBlockList.isNotEmpty) _originalMenuBlockList.clear();
+    _originalMenuBlockList.addAll(newMenuBlockList);
+
+    _updateBlockGeometryStatics(newMenuBlockList);
+
+    clearClusteredResult();
   }
 }
