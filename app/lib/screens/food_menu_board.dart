@@ -15,6 +15,16 @@ class FoodMenuBoard extends StatefulWidget {
 }
 
 class _FoodMenuBoardState extends State<FoodMenuBoard> {
+  static const _initialParse =
+      "총 6개의 음식 메뉴가 가로 2줄, 세로 3줄, 창문형으로 배치되어있습니다. 하단에는 페이지를 이동할 수 있는 버튼, 2개가 있습니다. 하단의 버튼들을 눌러서 메뉴를 살펴보세요!";
+
+  bool _isFirstAccess = true;
+
+  static const _initialPageCount = 1;
+  int _currentPageCount = _initialPageCount;
+
+  int? _maximumCount;
+
   @override
   void initState() {
     super.initState();
@@ -24,13 +34,6 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
   void dispose() {
     super.dispose();
   }
-
-  static const _initialParse =
-      "총 6개의 음식 메뉴가 가로 2줄, 세로 3줄, 창문형으로 배치되어있습니다. 하단에는 페이지를 이동할 수 있는 버튼, 2개가 있습니다. 하단의 버튼들을 눌러서 메뉴를 살펴보세요!";
-
-  bool isFirstAccess = true;
-  int _currentPageCount = 1;
-  int? _maximumCount;
 
   void _decreasePageCount() => setState(() {
         if (_currentPageCount == 1) return;
@@ -112,7 +115,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
       future: (() async {
         final menuOverallText =
             "$_currentPageCount페이지 메뉴는 다음과 같습니다. ${currentPageFoodMenuList.map((e) => e.name).join(", ")}";
-        final String text = isFirstAccess
+        final String text = _isFirstAccess
             ? "$_initialParse, $menuOverallText"
             : menuOverallText;
         await ttsController.speak(text);
@@ -170,7 +173,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
                     onPressed: () async {
                       if (isFirst) {
                         setState(() {
-                          isFirstAccess = false;
+                          _isFirstAccess = false;
                         });
                       }
                       _decreasePageCount();
@@ -186,7 +189,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
                     onPressed: () async {
                       if (isFirst) {
                         setState(() {
-                          isFirstAccess = false;
+                          _isFirstAccess = false;
                         });
                       }
                       _increasePageCount();
