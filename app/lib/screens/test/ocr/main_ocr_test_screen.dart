@@ -1,6 +1,6 @@
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/menu_button.dart';
-import 'package:app/screens/food_scan_screen.dart';
+import 'package:app/screens/prev/food_scan_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainOcrTestScreen extends StatelessWidget {

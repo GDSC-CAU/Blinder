@@ -92,7 +92,7 @@ class MainVoiceScreen extends StatelessWidget {
       onPressed: () {
         AppRouter.move(
           context,
-          to: RouterPath.foodMenuScan,
+          to: RouterPath.foodMenuDetect,
         );
       },
       routeText: "메뉴판 촬영",
