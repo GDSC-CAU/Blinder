@@ -52,7 +52,7 @@ class _FoodMenuScanScreenState extends State<FoodMenuScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (AppCameraController.status == CameraStatus.loading) {
+    if (AppCameraController.status == CameraStatus.waitForInitialization) {
       return const Center(
         child: CircularProgressIndicator(),
       );

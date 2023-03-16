@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 
 enum CameraStatus {
   error,
-  success,
-  loading,
+  waitForInitialization,
+  initialized,
   destroyed,
 }
 
 class AppCameraController {
   static AppCameraController? _instance;
-  static CameraStatus status = CameraStatus.loading;
+  static CameraStatus status = CameraStatus.waitForInitialization;
 
   final List<CameraDescription> cameras;
   CameraController controller;
@@ -60,7 +60,7 @@ class AppCameraController {
       throw Exception("There is no camera at connected device");
     }
 
-    status = CameraStatus.loading;
+    status = CameraStatus.waitForInitialization;
     return CameraController(
       cameras[cameraSelectionIndex],
       resolution,
@@ -84,48 +84,45 @@ class AppCameraController {
     status = CameraStatus.destroyed;
   }
 
-  void initializeCamera(FutureOr<dynamic> Function(void) initializer) {
-    if (status == CameraStatus.destroyed) {
-      status = CameraStatus.loading;
-      controller = _createCameraController(
-        cameras: cameras,
-        resolution: resolution,
-      );
-    }
+  void initializeCamera(
+    FutureOr<dynamic> Function(void) initializer,
+  ) {
+    try {
+      if (status == CameraStatus.destroyed) {
+        status = CameraStatus.waitForInitialization;
+        controller = _createCameraController(
+          cameras: cameras,
+          resolution: resolution,
+        );
+      }
+      controller.initialize().then(initializer);
+      status = CameraStatus.initialized;
+    } catch (error) {
+      status = CameraStatus.error;
 
-    controller.initialize().then(
-      (_) {
-        initializer(_);
-        status = CameraStatus.success;
-      },
-    ).catchError(
-      (Object error) {
-        status = CameraStatus.error;
-
-        if (error is CameraException) {
-          switch (error.code) {
-            case 'CameraAccessDenied':
-              print("CAMERA: CameraAccessDenied, ${error.code}");
-              break;
-            // ios
-            case "CameraAccessDeniedWithoutPrompt":
-              print("CAMERA: CameraAccessDeniedWithoutPrompt, ${error.code}");
-              break;
-            // ios
-            case "CameraAccessRestricted":
-              print("CAMERA: CameraAccessRestricted");
-              break;
-            // another error
-            default:
-              throw Exception("Unknown error: ${error.code}");
-          }
+      if (error is CameraException) {
+        switch (error.code) {
+          case 'CameraAccessDenied':
+            print("CAMERA: CameraAccessDenied, ${error.code}");
+            break;
+          // ios
+          case "CameraAccessDeniedWithoutPrompt":
+            print("CAMERA: CameraAccessDeniedWithoutPrompt, ${error.code}");
+            break;
+          // ios
+          case "CameraAccessRestricted":
+            print("CAMERA: CameraAccessRestricted");
+            break;
+          // another error
+          default:
+            throw Exception("Unknown error: ${error.code}");
         }
-      },
-    );
+      }
+    }
   }
 }
 
-late AppCameraController appCameraController;
+late final AppCameraController appCameraController;
 
 Future<void> initializeCameraInstance({
   required ResolutionPreset resolution,
