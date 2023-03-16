@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 
 enum CameraStatus {
   error,
-  success,
-  loading,
+  waitForInitialization,
+  initialized,
   destroyed,
 }
 
 class AppCameraController {
   static AppCameraController? _instance;
-  static CameraStatus status = CameraStatus.loading;
+  static CameraStatus status = CameraStatus.waitForInitialization;
 
   final List<CameraDescription> cameras;
   CameraController controller;
@@ -60,7 +60,7 @@ class AppCameraController {
       throw Exception("There is no camera at connected device");
     }
 
-    status = CameraStatus.loading;
+    status = CameraStatus.waitForInitialization;
     return CameraController(
       cameras[cameraSelectionIndex],
       resolution,
@@ -89,14 +89,14 @@ class AppCameraController {
   ) {
     try {
       if (status == CameraStatus.destroyed) {
-        status = CameraStatus.loading;
+        status = CameraStatus.waitForInitialization;
         controller = _createCameraController(
           cameras: cameras,
           resolution: resolution,
         );
       }
       controller.initialize().then(initializer);
-      status = CameraStatus.success;
+      status = CameraStatus.initialized;
     } catch (error) {
       status = CameraStatus.error;
 
