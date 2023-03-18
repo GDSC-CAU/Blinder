@@ -4,6 +4,7 @@ import 'dart:io' as io;
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/ml/object_detector_camera.dart';
 import 'package:app/ml/object_painter.dart';
+import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
@@ -213,9 +214,9 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
         _detectionStream = [];
       });
 
-      Navigator.pushNamed(
+      AppRouter.move(
         context,
-        "/captured_image",
+        to: RouterPath.foodMenuBoard,
         arguments: imagePath,
       );
     } else {
