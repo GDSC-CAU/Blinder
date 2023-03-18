@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:app/common/widgets/app_scaffold.dart';
+import 'package:app/utils/camera.dart';
 import 'package:flutter/material.dart';
 
 class CapturedImageScreen extends StatefulWidget {
@@ -10,13 +13,20 @@ class CapturedImageScreen extends StatefulWidget {
 
 class _CapturedImageScreenState extends State<CapturedImageScreen> {
   @override
+  void initState() {
+    super.initState();
+    appCameraController.destroyController();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final imagePath = ModalRoute.of(context)!.settings.arguments! as String;
+
     return AppScaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Text('거의 다 왔어유'),
-        ],
+      body: Center(
+        child: Image.file(
+          File(imagePath),
+        ),
       ),
     );
   }
