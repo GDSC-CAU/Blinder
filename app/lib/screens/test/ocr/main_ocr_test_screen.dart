@@ -1,6 +1,6 @@
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/menu_button.dart';
-import 'package:app/screens/test/ocr/ocr_screen.dart';
+import 'package:app/screens/prev/food_scan_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainOcrTestScreen extends StatelessWidget {
@@ -20,7 +20,7 @@ class MainOcrTestScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const OcrScreen(),
+                    builder: (context) => const FoodScanScreen(),
                   ),
                 );
               },

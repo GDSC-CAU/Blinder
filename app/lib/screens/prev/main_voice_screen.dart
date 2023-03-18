@@ -1,5 +1,6 @@
 import 'package:app/common/widgets/screen_layout.dart';
 import 'package:app/providers/food_map_provider.dart';
+import 'package:app/router/app_router.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -89,10 +90,10 @@ class MainVoiceScreen extends StatelessWidget {
     ttsController.speak('음식점 이름을 말하거나, 하단의 메뉴판 촬영 버튼을 눌러주세요.');
     return ScreenLayout(
       onPressed: () {
-        // AppRouter.move(
-        //   context,
-        //   to: RouterPath.foodMenuScan,
-        // );
+        AppRouter.move(
+          context,
+          to: RouterPath.foodMenuDetect,
+        );
       },
       routeText: "메뉴판 촬영",
       children: [

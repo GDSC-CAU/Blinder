@@ -57,5 +57,3 @@ class MenuButton extends StatelessWidget {
     );
   }
 }
-
-const a = 3;

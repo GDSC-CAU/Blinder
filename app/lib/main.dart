@@ -16,7 +16,7 @@ Future<void> setupPackages() async {
 }
 
 Future<void> main() async {
-  await setupPackages();
+  // await setupPackages();
 
   runApp(const Blinder());
 }
