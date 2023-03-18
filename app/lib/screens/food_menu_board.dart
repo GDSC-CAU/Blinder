@@ -111,15 +111,13 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
     final isFirst = _currentPageCount == 1;
     final isLast = _currentPageCount == _maximumCount;
 
-    return FutureBuilder<void>(
-      future: (() async {
-        final menuOverallText =
-            "$_currentPageCount페이지 메뉴는 다음과 같습니다. ${currentPageFoodMenuList.map((e) => e.name).join(", ")}";
-        final String text = _isFirstAccess
-            ? "$_initialParse, $menuOverallText"
-            : menuOverallText;
-        await ttsController.speak(text);
-      })(),
+    final menuOverallText =
+        "$_currentPageCount페이지 메뉴는 다음과 같습니다. ${currentPageFoodMenuList.map((e) => e.name).join(", ")}";
+    final String text =
+        _isFirstAccess ? "$_initialParse, $menuOverallText" : menuOverallText;
+
+    return FutureBuilder(
+      future: ttsController.speak(text),
       builder: (context, snapshot) => AppScaffold(
         body: Column(
           children: [
