@@ -31,13 +31,9 @@ class Blinder extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: "Blinder",
-        // routes: AppRouter.routes,
-        // home: AppRouter.initialScreen,
-        // initialRoute: AppRouter.mainVoicePath,
         routes: {
           '/': (context) => const ObjectDetectorView(
-                executionFrameRate: 3,
-                capturingDuration: 2,
+                capturingDuration: 3,
               ),
           '/captured_image': (context) => const CapturedImageScreen(),
         },
