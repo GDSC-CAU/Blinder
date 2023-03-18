@@ -3,7 +3,6 @@
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/menu_button.dart';
 import 'package:app/common/widgets/screen_title.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 
@@ -27,22 +26,22 @@ class FoodOrderScreen extends StatelessWidget {
                 MenuButton(
                   text: '음식 주문',
                   onPressed: () {
-                    AppRouter.move(
-                      context,
-                      to: RouterPath.foodReceipt,
-                    );
+                    // AppRouter.move(
+                    //   context,
+                    //   to: RouterPath.foodReceipt,
+                    // );
                   },
                 ),
                 const SizedBox(height: 50),
                 MenuButton(
                   text: '음식 추가',
                   onPressed: () {
-                    AppRouter.moveAndClear(
-                      context,
-                      to: RouterPath.foodCategory,
-                      clearRouterStackUntil: (route) =>
-                          route.settings.name == AppRouter.foodMenuScanPath,
-                    );
+                    // AppRouter.moveAndClear(
+                    //   context,
+                    //   to: RouterPath.foodCategory,
+                    //   clearRouterStackUntil: (route) =>
+                    //       route.settings.name == AppRouter.foodMenuScanPath,
+                    // );
                   },
                 ),
               ],

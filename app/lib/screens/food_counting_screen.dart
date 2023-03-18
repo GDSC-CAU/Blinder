@@ -5,7 +5,6 @@ import 'package:app/common/widgets/screen_title.dart';
 import 'package:app/models/food_cart_item.dart';
 import 'package:app/models/food_menu.dart';
 import 'package:app/providers/cart_provider.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -107,10 +106,10 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
                         count: currentCartItemCount,
                       ),
                     );
-                AppRouter.move(
-                  context,
-                  to: RouterPath.foodOrder,
-                );
+                // AppRouter.move(
+                //   context,
+                //   to: RouterPath.foodOrder,
+                // );
               },
             ),
           ),
