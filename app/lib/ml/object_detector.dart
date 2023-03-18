@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io' as io;
 
+import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/ml/object_detector_camera.dart';
 import 'package:app/ml/object_painter.dart';
-import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
+import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,28 +13,28 @@ import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+class ObjectDetectorView extends StatefulWidget {
+  /// Target capture and retention time conditions
+  final int capturingDuration;
+
+  const ObjectDetectorView({
+    required this.capturingDuration,
+  });
+
+  @override
+  State<ObjectDetectorView> createState() => _ObjectDetectorView();
+}
+
 enum ObjectDetectorState {
   beforeInitialized,
   initialized,
   error,
 }
 
-class ObjectDetectorView extends StatefulWidget {
-  /// execution `ML` model, in certain frame rate
-  ///
-  /// ex) `3`: `60`FPS/s / `3` = `20`FPS/s
-  final int executionFrameRate;
-
-  /// Target capture and retention time conditions
-  final int capturingDuration;
-
-  const ObjectDetectorView({
-    required this.executionFrameRate,
-    required this.capturingDuration,
-  });
-
-  @override
-  State<ObjectDetectorView> createState() => _ObjectDetectorView();
+enum MenuBoardDetectProcess {
+  process,
+  capturing,
+  success,
 }
 
 class _ObjectDetectorView extends State<ObjectDetectorView> {
@@ -44,8 +45,15 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
 
   CustomPaint? _customPaint;
 
+  MenuBoardDetectProcess _menuBoardDetectProcess =
+      MenuBoardDetectProcess.process;
+
+  int _executionCount = 0;
+
   bool _isDetectProcessing = false;
+
   List<bool> _detectionStream = [];
+
   void _updateDetectionStream(bool targetExist) {
     if (targetExist) {
       _detectionStream.add(true);
@@ -57,10 +65,11 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
 
   /// If target is exists `capturingDuration` sec, `true`
   bool get _isFullyCaptured {
-    const originalExecutionPerSecond = 60;
-    final framePerSecond =
-        originalExecutionPerSecond / widget.executionFrameRate;
-    return _detectionStream.length >= framePerSecond * widget.capturingDuration;
+    const executionPerSecond = 60;
+    const calculationSpeedRate = 0.5;
+
+    return _detectionStream.length >=
+        (executionPerSecond * widget.capturingDuration) * calculationSpeedRate;
   }
 
   static const targetLabel = "menu_board";
@@ -68,29 +77,48 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   @override
   void initState() {
     super.initState();
-
     _initializeMenuBoardDetector();
   }
 
   @override
   void dispose() {
-    _objectDetector.close();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ObjectDetectorCamera(
-      handleVideoImage: (videoImage) async {
-        await _handleDetection(
-          videoImage: videoImage,
-          context: context,
+    return _objectDetectorView(context);
+  }
+
+  Widget _objectDetectorView(BuildContext context) {
+    switch (_menuBoardDetectProcess) {
+      case MenuBoardDetectProcess.process:
+        return ObjectDetectorCamera(
+          handleVideoImage: (videoImage) async {
+            await _handleDetection(
+              context: context,
+              videoImage: videoImage,
+            );
+          },
+          customPaint: _customPaint,
         );
-      },
-      customPaint: _customPaint,
-      executionFrameRate: widget.executionFrameRate,
-    );
+
+      case MenuBoardDetectProcess.capturing:
+        return const CapturingProcess();
+
+      case MenuBoardDetectProcess.success:
+        return const AppScaffold(
+          body: Center(
+            child: Text(
+              "성공",
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+    }
   }
 
   Future<String> _getModelPath(String assetPath) async {
@@ -135,33 +163,66 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
     _objectDetectorState = ObjectDetectorState.initialized;
   }
 
-  Future<void> _captureImage(
-    BuildContext context,
-  ) async {
-    if (AppCameraController.status == CameraStatus.initialized) {
-      final XFile capturedImage =
-          await appCameraController.controller.takePicture();
+  Future<String?> _getCapturedImagePath() async {
+    if (AppCameraController.status != CameraStatus.destroyed &&
+        AppCameraController.status != CameraStatus.waitForInitialization) {
+      await appCameraController.controller.lockCaptureOrientation();
+      await appCameraController.controller.stopImageStream();
 
-      await _objectDetector.close();
+      final XFile file = await appCameraController.controller.takePicture();
 
-      AppRouter.move(
-        context,
-        to: RouterPath.foodMenu,
-        arguments: capturedImage.path,
-      );
+      return file.path;
     }
+    return null;
   }
 
   Future<void> _handleDetection({
     required BuildContext context,
     required InputImage? videoImage,
   }) async {
-    if (videoImage == null) return;
+    if (videoImage == null) {
+      return;
+    }
 
-    await detectMenuBoard(videoImage);
+    if (_menuBoardDetectProcess == MenuBoardDetectProcess.capturing ||
+        _menuBoardDetectProcess == MenuBoardDetectProcess.success) {
+      return;
+    }
+
+    const detectedMessageCondition = 15;
+    if (_detectionStream.length == detectedMessageCondition) {
+      await ttsController.speak("메뉴판으로 추정되는 물체를 발견했습니다!");
+    }
 
     if (_isFullyCaptured) {
-      await _captureImage(context);
+      _executionCount++;
+      if (_executionCount != 1) return;
+
+      await ttsController.speak("메뉴판을 발견했습니다! 잠시 고정해주세요.");
+
+      setState(() {
+        _menuBoardDetectProcess = MenuBoardDetectProcess.capturing;
+      });
+
+      final imagePath = await _getCapturedImagePath();
+
+      await _objectDetector.close();
+
+      setState(() {
+        _menuBoardDetectProcess = MenuBoardDetectProcess.success;
+        _detectionStream = [];
+      });
+
+      Navigator.pushNamed(
+        context,
+        "/captured_image",
+        arguments: imagePath,
+      );
+    } else {
+      await detectMenuBoard(videoImage);
+      setState(() {
+        _menuBoardDetectProcess = MenuBoardDetectProcess.process;
+      });
     }
   }
 
@@ -169,7 +230,8 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
   Future<void> detectMenuBoard(
     InputImage inputImage,
   ) async {
-    if (_objectDetectorState == ObjectDetectorState.error) return;
+    if (_objectDetectorState == ObjectDetectorState.beforeInitialized ||
+        _objectDetectorState == ObjectDetectorState.error) return;
 
     if (_isDetectProcessing == true) return;
     _isDetectProcessing = true;
@@ -179,8 +241,11 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
           inputImage.inputImageData?.imageRotation == null;
 
       if (isInputImageLost) {
+        _updateDetectionStream(false);
+        _isDetectProcessing = false;
+
         setState(() {
-          _updateDetectionStream(false);
+          _customPaint = null;
         });
         return;
       }
@@ -195,10 +260,12 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
             ),
           )
           .toList();
-
       if (targetObjectList.isEmpty) {
+        _updateDetectionStream(false);
+        _isDetectProcessing = false;
+
         setState(() {
-          _updateDetectionStream(false);
+          _customPaint = null;
         });
         return;
       }
@@ -208,23 +275,60 @@ class _ObjectDetectorView extends State<ObjectDetectorView> {
         rotation: inputImage.inputImageData!.imageRotation,
         absoluteSize: inputImage.inputImageData!.size,
         color: Colors.green.shade300,
-        strokeWidth: 5,
+        strokeWidth: 3,
       );
+
+      _updateDetectionStream(true);
+      _isDetectProcessing = false;
 
       setState(() {
         _customPaint = CustomPaint(
           painter: menuBoardPainter,
         );
-        _updateDetectionStream(true);
       });
     } catch (mlError) {
       print(mlError);
 
       _objectDetectorState = ObjectDetectorState.error;
-      return;
-    }
+      _isDetectProcessing = false;
 
-    _isDetectProcessing = false;
-    return;
+      setState(() {
+        _customPaint = null;
+      });
+    }
+  }
+}
+
+class CapturingProcess extends StatelessWidget {
+  const CapturingProcess({
+    super.key,
+  });
+
+  Future<void> _capturingGuide() async {
+    await ttsController.speak("사진을 촬영 중입니다, 핸드폰을 움직이 말아주세요!");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _capturingGuide(),
+      builder: (context, snapshot) => AppScaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                "메뉴판 촬영중...",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 25,
+                ),
+              ),
+              CircularProgressIndicator(),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
