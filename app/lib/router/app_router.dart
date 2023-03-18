@@ -1,5 +1,5 @@
-import 'package:app/ml/captured_image.dart';
-import 'package:app/ml/object_detector.dart';
+import 'package:app/screens/food_menu_board.dart';
+import 'package:app/screens/food_menu_detect.dart';
 import 'package:flutter/material.dart';
 
 enum RouterPath {
@@ -18,15 +18,13 @@ class AppRouter {
     RouterPath.foodMenuBoard: foodMenuBoardPath,
   };
 
-  static Widget initialScreen = const ObjectDetectorView(
-    capturingDuration: 2,
-  );
-
   static final Map<String, Widget Function(BuildContext)> routes = {
     routePath[RouterPath.foodMenuDetect] ?? foodMenuDetectPath: (context) =>
-        initialScreen,
+        const FoodMenuDetect(
+          capturingDuration: 2,
+        ),
     routePath[RouterPath.foodMenuBoard] ?? foodMenuBoardPath: (context) =>
-        const CapturedImageScreen(),
+        const FoodMenuBoard(),
   };
 
   static void move<RoutingArguments extends Object>(
