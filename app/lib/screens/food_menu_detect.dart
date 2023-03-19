@@ -13,9 +13,11 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
+import 'package:image/image.dart' as image;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 class FoodMenuDetect extends StatefulWidget {
   /// Target capture and retention time conditions
@@ -41,9 +43,24 @@ enum MenuBoardDetectProcessState {
   success,
 }
 
+enum DeviceOrientation {
+  /// `0`deg, center
+  middle0Deg,
+
+  /// `+90`deg, right
+  ccw90Deg,
+
+  /// `-90`deg, left
+  cw90Deg,
+}
+
 class _ObjectDetectorView extends State<FoodMenuDetect> {
   final MenuEngine menuEngine = MenuEngine();
   late final ObjectDetector _objectDetector;
+
+  DeviceOrientation? _deviceOrientation;
+  late final StreamSubscription<AccelerometerEvent>
+      _accelerometerStreamSubscription;
 
   ObjectDetectorState _objectDetectorState =
       ObjectDetectorState.beforeInitialized;
@@ -79,10 +96,47 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
 
   static const targetLabel = "menu_board";
 
+  /// `X` acc (near gravity) = `+90`deg, `ccw90deg`
+  ///
+  /// `X` acc (near gravity) = `-90`deg, `cw90deg`
+  ///
+  /// `Y` acc (near gravity) = `0`deg, `middle0deg`
+  void _updateDeviceOrientationByAccelerometer({
+    required double xAcc,
+    required double yAcc,
+  }) {
+    const halfGravity = 9.81 / 2;
+    final isNotRotated = yAcc.abs() > xAcc.abs();
+    if (isNotRotated) {
+      _deviceOrientation = DeviceOrientation.middle0Deg;
+      return;
+    }
+
+    if (xAcc > halfGravity) {
+      _deviceOrientation = DeviceOrientation.ccw90Deg;
+      return;
+    }
+
+    _deviceOrientation = DeviceOrientation.cw90Deg;
+  }
+
   @override
   void initState() {
     super.initState();
-    _initializeMenuBoardDetector();
+
+    _initializeMenuBoardDetector().then((_) {
+      _accelerometerStreamSubscription = accelerometerEvents.listen(
+        (AccelerometerEvent event) {
+          setState(() {
+            _updateDeviceOrientationByAccelerometer(
+              xAcc: event.x,
+              yAcc: event.y,
+            );
+            print(_deviceOrientation);
+          });
+        },
+      );
+    });
   }
 
   @override
@@ -168,15 +222,46 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
     _objectDetectorState = ObjectDetectorState.initialized;
   }
 
+  Future<io.File?> getRotatedImageFile({
+    required String imagePath,
+    required int angle,
+  }) async {
+    final originalImageFile = io.File(imagePath);
+    final List<int> originalImageBytes = await originalImageFile.readAsBytes();
+    final image.Image? originalImage = image.decodeImage(originalImageBytes);
+
+    if (originalImage == null) return null;
+
+    final rotatedImage = image.copyRotate(
+      originalImage,
+      angle,
+    );
+
+    final rotatedImageFile = await originalImageFile.writeAsBytes(
+      image.encodeJpg(rotatedImage),
+    );
+
+    return rotatedImageFile;
+  }
+
   Future<String?> _getCapturedImagePath() async {
     if (AppCameraController.status != CameraStatus.destroyed &&
         AppCameraController.status != CameraStatus.waitForInitialization) {
-      await appCameraController.controller.lockCaptureOrientation();
+      // await appCameraController.controller.lockCaptureOrientation();
       await appCameraController.controller.stopImageStream();
 
-      final XFile file = await appCameraController.controller.takePicture();
+      final XFile capturedImageFile =
+          await appCameraController.controller.takePicture();
+      if (_deviceOrientation == DeviceOrientation.middle0Deg) {
+        return capturedImageFile.path;
+      }
 
-      return file.path;
+      final fixedRotationImageFile = await getRotatedImageFile(
+        imagePath: capturedImageFile.path,
+        angle: _deviceOrientation == DeviceOrientation.cw90Deg ? -180 : 0,
+      );
+
+      return fixedRotationImageFile?.path;
     }
     return null;
   }
@@ -209,9 +294,9 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
         _menuBoardDetectProcessState = MenuBoardDetectProcessState.capturing;
       });
 
-      final imagePath = await _getCapturedImagePath();
+      final capturedImagePath = await _getCapturedImagePath();
 
-      if (imagePath == null) {
+      if (capturedImagePath == null) {
         _executionCount = 0;
         setState(() {
           _menuBoardDetectProcessState = MenuBoardDetectProcessState.process;
@@ -219,15 +304,12 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
         return;
       }
 
+      // remove object detector
       await _objectDetector.close();
-      await menuEngine.parse(imagePath);
-      print(
-        menuEngine.foodMenu.fold(
-          "",
-          (previousValue, element) =>
-              "$previousValue\n ${element.name}: ${element.price}",
-        ),
-      );
+      // cancel sensor subscription
+      await _accelerometerStreamSubscription.cancel();
+
+      await menuEngine.parse(capturedImagePath);
 
       Provider.of<FoodMenuProvider>(
         context,
