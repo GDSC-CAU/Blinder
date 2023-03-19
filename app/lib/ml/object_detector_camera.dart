@@ -27,6 +27,7 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
   @override
   void initState() {
     super.initState();
+    _startVideo();
   }
 
   @override
@@ -36,11 +37,8 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _startVideo(),
-      builder: (context, snapshot) => Scaffold(
-        body: _videoView(),
-      ),
+    return Scaffold(
+      body: _videoView(),
     );
   }
 
@@ -83,7 +81,6 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
 
   Future<void> _startVideo() async {
     if (_isCameraInitialized ||
-        AppCameraController.status == CameraStatus.destroyed ||
         AppCameraController.status == CameraStatus.initialized) return;
 
     await appCameraController.initializeCamera(
