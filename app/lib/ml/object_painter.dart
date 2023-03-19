@@ -3,19 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 
 class ObjectDetectorPainter extends CustomPainter {
-  final List<DetectedObject> detectedObjectList;
-  final Size absoluteSize;
-  final InputImageRotation rotation;
   final Color _color;
+  final Size _absoluteSize;
   final double _strokeWidth;
+  final InputImageRotation _rotation;
+  final List<DetectedObject> _detectedObjectList;
 
   ObjectDetectorPainter({
-    required this.detectedObjectList,
-    required this.rotation,
-    required this.absoluteSize,
+    required List<DetectedObject> detectedObjectList,
+    required InputImageRotation rotation,
+    required Size absoluteSize,
     required Color color,
     required double strokeWidth,
-  })  : _color = color,
+  })  : _rotation = rotation,
+        _absoluteSize = absoluteSize,
+        _detectedObjectList = detectedObjectList,
+        _color = color,
         _strokeWidth = strokeWidth;
 
   @override
@@ -25,30 +28,30 @@ class ObjectDetectorPainter extends CustomPainter {
       ..strokeWidth = _strokeWidth
       ..color = _color;
 
-    for (final DetectedObject detectedObject in detectedObjectList) {
+    for (final DetectedObject detectedObject in _detectedObjectList) {
       final left = CoordTranslator.translateX(
         detectedObject.boundingBox.left,
-        rotation,
+        _rotation,
         size,
-        absoluteSize,
+        _absoluteSize,
       );
       final top = CoordTranslator.translateY(
         detectedObject.boundingBox.top,
-        rotation,
+        _rotation,
         size,
-        absoluteSize,
+        _absoluteSize,
       );
       final right = CoordTranslator.translateX(
         detectedObject.boundingBox.right,
-        rotation,
+        _rotation,
         size,
-        absoluteSize,
+        _absoluteSize,
       );
       final bottom = CoordTranslator.translateY(
         detectedObject.boundingBox.bottom,
-        rotation,
+        _rotation,
         size,
-        absoluteSize,
+        _absoluteSize,
       );
 
       canvas.drawRect(
