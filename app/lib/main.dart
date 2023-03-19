@@ -13,6 +13,8 @@ Future<void> setupPackages() async {
     resolution: ResolutionPreset.max,
     imageFormatGroup: ImageFormatGroup.yuv420,
   );
+
+  await appCameraController.destroyController();
 }
 
 Future<void> main() async {
