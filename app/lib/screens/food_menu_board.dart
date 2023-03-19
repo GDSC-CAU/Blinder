@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/providers/food_menu_provider.dart';
+import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +34,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
   @override
   void dispose() {
     super.dispose();
+    appCameraController.destroyController();
   }
 
   void _decreasePageCount() => setState(() {
@@ -84,6 +86,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
     const menuCountPerPage = 6;
     final currentFoodMenu = Provider.of<FoodMenuProvider>(
       context,
+      listen: false,
     ).foodMenuList;
 
     final currentPageFoodMenuList = _getPaginatedItem(
@@ -169,15 +172,12 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
                   Button(
                     text: isFirst ? "첫번째 메뉴페이지" : "이전",
                     onPressed: () async {
-                      if (isFirst) {
-                        setState(() {
+                      setState(() {
+                        if (isFirst) {
                           _isFirstAccess = false;
-                        });
-                      }
-                      _decreasePageCount();
-                      await ttsController.speak(
-                        "${isFirst ? "첫번째" : _currentPageCount} 페이지 입니다.",
-                      );
+                        }
+                        _decreasePageCount();
+                      });
                     },
                     backgroundColor: Colors.red.shade500,
                     foregroundColor: Palette.$white,
@@ -185,14 +185,12 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
                   Button(
                     text: isLast ? "마지막 메뉴페이지" : "다음",
                     onPressed: () async {
-                      if (isFirst) {
-                        setState(() {
+                      setState(() {
+                        if (isFirst) {
                           _isFirstAccess = false;
-                        });
-                      }
-                      _increasePageCount();
-                      await ttsController.speak(
-                          "${isLast ? "마지막, $_currentPageCount" : _currentPageCount} 페이지입니다.");
+                        }
+                        _increasePageCount();
+                      });
                     },
                     backgroundColor: Colors.green.shade500,
                     foregroundColor: Palette.$white,
