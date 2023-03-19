@@ -68,7 +68,7 @@ class MenuEngine {
     _filterBlockByHeightDistribution();
     _sortBlockListByCoordYX();
     _combineBlockList(
-      scaleRatioOfSearchWidth: 3,
+      scaleRatioOfSearchWidth: 4,
       scaleRatioOfSearchHeight: 0.65,
     );
     _filterBlocksByKOREAN_JOSA_LIST();
