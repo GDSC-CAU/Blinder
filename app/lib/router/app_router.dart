@@ -20,9 +20,7 @@ class AppRouter {
 
   static final Map<String, Widget Function(BuildContext)> routes = {
     routePath[RouterPath.foodMenuDetect] ?? foodMenuDetectPath: (context) =>
-        const FoodMenuDetect(
-          capturingDuration: 2,
-        ),
+        const FoodMenuDetect(capturingDuration: 2),
     routePath[RouterPath.foodMenuBoard] ?? foodMenuBoardPath: (context) =>
         const FoodMenuBoard(),
   };
