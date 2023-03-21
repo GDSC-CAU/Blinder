@@ -1,5 +1,7 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
+import 'dart:math';
+
 import 'package:app/core/block/block.dart';
 import 'package:app/core/block/menu_block.dart';
 import 'package:app/core/clusters/clustering_engine.dart';
@@ -32,7 +34,7 @@ class MenuEngine {
       : clusteringEngine = ClusteringEngine(
           menuBlockList: [],
           maximumAngleOfYAxis: 5,
-          maximumPointGapRatio: 4,
+          maximumPointGapRatio: 3,
           minimumPointOfLine: 2,
         );
 
@@ -68,8 +70,14 @@ class MenuEngine {
     _filterBlockByHeightDistribution();
     _sortBlockListByCoordYX();
     _combineBlockList(
-      scaleRatioOfSearchWidth: 4,
+      scaleRatioOfSearchWidth: 2.75,
       scaleRatioOfSearchHeight: 0.65,
+    );
+    //TODO: rotate image flatten cordinate system
+    // _flattenCoordinateSystem();
+    _combineBlockList(
+      scaleRatioOfSearchWidth: 5,
+      scaleRatioOfSearchHeight: 0.5,
     );
     _filterBlocksByKOREAN_JOSA_LIST();
     _removeInvalidCharacters();
@@ -130,6 +138,85 @@ class MenuEngine {
     _updateMenuBlockList(sortedMenuBlockList);
   }
 
+  void _flattenCoordinateSystem() {
+    final topLeftYCoordList = menuBlockList.map((e) => e.block.tl.y).toList();
+    final topLeftXCoordList = menuBlockList.map((e) => e.block.tl.x).toList();
+
+    final originX = topLeftXCoordList[Math.findMinIndex(topLeftXCoordList)];
+    final originY = topLeftYCoordList[Math.findMinIndex(topLeftYCoordList)];
+    final origin = Coord(x: originX, y: originY);
+
+    double _getRadianBetweenX(Coord targetVector) {
+      final dotWithUnitX = Coord.dot(
+        targetVector,
+        Coord(x: 1, y: 0),
+      );
+      final angleInRadian = acos(dotWithUnitX / targetVector.magnitude);
+      if (angleInRadian == double.nan) {
+        return 0;
+      }
+      return angleInRadian;
+    }
+
+    final blockRadianWithXList = menuBlockList.fold<List<double>>(
+      [],
+      (radianList, menuBlock) {
+        final topLineVector = menuBlock.block.tr - menuBlock.block.tl;
+        final topRadianWithXAxis = _getRadianBetweenX(Coord(
+          x: topLineVector.x,
+          y: topLineVector.y,
+        ));
+        final bottomLineVector = menuBlock.block.br - menuBlock.block.bl;
+        final bottomRadianWithXAxis = _getRadianBetweenX(Coord(
+          x: bottomLineVector.x,
+          y: bottomLineVector.y,
+        ));
+
+        radianList.add(topRadianWithXAxis);
+        radianList.add(bottomRadianWithXAxis);
+        return radianList;
+      },
+    );
+
+    final averageRadianWithX = Statics.avg(blockRadianWithXList);
+
+    final MenuBlockList flattenedMenuBlockList = menuBlockList.map(
+      (curr) {
+        final tl = curr.block.tl - origin;
+        final tr = curr.block.tr - origin;
+        final bl = curr.block.bl - origin;
+        final br = curr.block.br - origin;
+
+        final flattenedMenuBlock = MenuBlock(
+          text: curr.text,
+          block: Block(
+            initialPosition: RectPosition(
+              tl: Coord.rotate(
+                Coord(x: tl.x, y: tl.y),
+                rotationRadian: averageRadianWithX,
+              ),
+              tr: Coord.rotate(
+                Coord(x: tr.x, y: tr.y),
+                rotationRadian: averageRadianWithX,
+              ),
+              bl: Coord.rotate(
+                Coord(x: bl.x, y: bl.y),
+                rotationRadian: averageRadianWithX,
+              ),
+              br: Coord.rotate(
+                Coord(x: br.x, y: br.y),
+                rotationRadian: averageRadianWithX,
+              ),
+            ),
+          ),
+        );
+        return flattenedMenuBlock;
+      },
+    ).toList();
+
+    _updateMenuBlockList(flattenedMenuBlockList);
+  }
+
   void _normalizeBlockList() {
     final yCoordList = menuBlockList.map((e) => e.block.tl.y).toList();
     final heightList = menuBlockList.map((e) => e.block.height).toList();
@@ -182,8 +269,8 @@ class MenuEngine {
   }
 
   void _combineBlockList({
-    double scaleRatioOfSearchWidth = 2.5,
-    double scaleRatioOfSearchHeight = 0.75,
+    required double scaleRatioOfSearchWidth,
+    required double scaleRatioOfSearchHeight,
   }) {
     final heightAvg = Statics.avg(
       menuBlockList.map((e) => e.block.height).toList(),
@@ -316,6 +403,18 @@ class MenuEngine {
         .trim();
   }
 
+  String _removeNonKoreanEnglish(String text) {
+    const divider = "";
+    final RegExp nonKoreanEnglish =
+        RegExp(r'[^\uAC00-\uD7A3ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9]');
+    return text
+        .replaceAll(
+          nonKoreanEnglish,
+          divider,
+        )
+        .trim();
+  }
+
   String _removeLastComma(String text) =>
       text.endsWith(",") ? text.replaceAll(RegExp(','), "") : text;
 
@@ -324,7 +423,9 @@ class MenuEngine {
         .map(
           (e) => MenuBlock(
             text: _removeLastComma(
-              _removeNonKoreanEnglishPriceNumber(e.text),
+              isPriceText(e.text)
+                  ? _removeNonKoreanEnglishPriceNumber(e.text)
+                  : _removeNonKoreanEnglish(e.text),
             ),
             block: e.block,
           ),
