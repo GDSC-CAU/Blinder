@@ -18,6 +18,27 @@ class Coord extends Point<num> {
         y: targetCoord.y + yAmount,
       );
 
+  factory Coord.rotate(
+    Coord targetCoord, {
+    required num rotationRadian,
+  }) {
+    final rotatedX = cos(rotationRadian) * targetCoord.x -
+        sin(rotationRadian) * targetCoord.y;
+    final rotatedY = sin(rotationRadian) * targetCoord.x +
+        cos(rotationRadian) * targetCoord.y;
+
+    return Coord(
+      x: rotatedX,
+      y: rotatedY,
+    );
+  }
+
+  static num dot(
+    Coord first,
+    Coord second,
+  ) =>
+      first.x * second.x + first.y + second.y;
+
   @override
   String toString() {
     return "{\n       x: $x,\n       y: $y\n     }";
