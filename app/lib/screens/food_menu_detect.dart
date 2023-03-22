@@ -309,8 +309,10 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       // cancel sensor subscription
       await _accelerometerStreamSubscription.cancel();
 
+      await ttsController.speak("메뉴를 만들고 있습니다! 잠시만 기다려주세요");
       await menuEngine.parse(capturedImagePath);
 
+      await Future.delayed(const Duration(seconds: 1));
       Provider.of<FoodMenuProvider>(
         context,
         listen: false,
