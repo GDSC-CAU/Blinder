@@ -206,12 +206,15 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
   }
 
   Future<void> _initializeMenuBoardDetector() async {
-    const modelSourcePath = 'assets/ml/menu-detector.tflite';
-    final modelPath = await _getModelPath(modelSourcePath);
+    const modelName = 'menu-detector';
+    // final modelPath = await _getModelPath(modelSourcePath);
 
-    final options = LocalObjectDetectorOptions(
+    final response =
+        await FirebaseObjectDetectorModelManager().downloadModel(modelName);
+    print('Downloaded: $response');
+    final options = FirebaseObjectDetectorOptions(
       mode: DetectionMode.stream,
-      modelPath: modelPath,
+      modelName: modelName,
       classifyObjects: true,
       multipleObjects: true,
     );

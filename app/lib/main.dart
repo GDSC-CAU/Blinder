@@ -3,11 +3,17 @@ import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
+import 'firebase_options.dart';
 
 Future<void> setupPackages() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await initTts();
   await initializeCameraInstance(
     resolution: ResolutionPreset.max,
