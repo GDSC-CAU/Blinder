@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1025428406944",
+    "project_id": "gdsc-sol-t3",
+    "storage_bucket": "gdsc-sol-t3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025428406944:android:886775c6332270cb173fc5",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1025428406944-c62muljsl8qhaqgmafi52in8tan789mk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCj34FhFSn-aTNJM7HXFthyM8rAtZ6fVsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1025428406944-c62muljsl8qhaqgmafi52in8tan789mk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1025428406944-3aefpsn3hrr07i52r0qc4pbcpq1kugd3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "blinder.com.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
