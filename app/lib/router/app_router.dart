@@ -10,7 +10,7 @@ enum RouterPath {
 class AppRouter {
   const AppRouter();
 
-  static const String foodMenuDetectPath = "/food-menu-detect";
+  static const String foodMenuDetectPath = "/";
   static const String foodMenuBoardPath = "/food-menu-board";
 
   static const Map<RouterPath, String> routePath = {
@@ -18,14 +18,9 @@ class AppRouter {
     RouterPath.foodMenuBoard: foodMenuBoardPath,
   };
 
-  static Widget initialScreen = const FoodMenuDetect(
-    capturingDuration: 2,
-    executionFrameRate: 3,
-  );
-
   static final Map<String, Widget Function(BuildContext)> routes = {
     routePath[RouterPath.foodMenuDetect] ?? foodMenuDetectPath: (context) =>
-        initialScreen,
+        const FoodMenuDetect(capturingDuration: 2),
     routePath[RouterPath.foodMenuBoard] ?? foodMenuBoardPath: (context) =>
         const FoodMenuBoard(),
   };

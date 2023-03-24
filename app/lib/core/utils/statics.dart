@@ -1,4 +1,3 @@
-
 import 'dart:math';
 
 import 'package:app/utils/array.dart';
@@ -167,12 +166,14 @@ class Statics {
     required int interval,
   }) {
     final avg = Statics.avg(intList);
-    final int tolerance = interval ~/ 2;
+    final double tolerance = interval / 2;
 
     final List<int> normalizedData = intList.map(
       (data) {
-        final normalizedValue =
-            ((data - avg) ~/ interval) * interval + avg.toInt();
+        final normalizedValue = interval == 0
+            ? avg.toInt()
+            : ((data - avg) ~/ interval) * interval + avg.toInt();
+
         final diff = (data - normalizedValue).abs();
 
         return (diff <= tolerance)

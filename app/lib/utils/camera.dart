@@ -78,15 +78,15 @@ class AppCameraController {
     }
   }
 
-  void destroyController() {
-    controller.dispose();
+  Future<void> destroyController() async {
+    await controller.dispose();
     controller.debugCheckIsDisposed();
     status = CameraStatus.destroyed;
   }
 
-  void initializeCamera(
+  Future<void> initializeCamera(
     FutureOr<dynamic> Function(void) initializer,
-  ) {
+  ) async {
     try {
       if (status == CameraStatus.destroyed) {
         status = CameraStatus.waitForInitialization;
@@ -95,7 +95,7 @@ class AppCameraController {
           resolution: resolution,
         );
       }
-      controller.initialize().then(initializer);
+      await controller.initialize().then(initializer);
       status = CameraStatus.initialized;
     } catch (error) {
       status = CameraStatus.error;

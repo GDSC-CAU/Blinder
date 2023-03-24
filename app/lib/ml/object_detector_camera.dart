@@ -8,15 +8,12 @@ import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 class ObjectDetectorCamera extends StatefulWidget {
   final CustomPaint? customPaint;
-  final void Function(InputImage? videoImage) handleVideoImage;
+  final Future<void> Function(InputImage? videoImage) handleVideoImage;
   final CameraLensDirection initialDirection;
-
-  final int executionFrameRate;
 
   const ObjectDetectorCamera({
     required this.customPaint,
     required this.handleVideoImage,
-    required this.executionFrameRate,
     this.initialDirection = CameraLensDirection.back,
   });
 
@@ -26,19 +23,15 @@ class ObjectDetectorCamera extends StatefulWidget {
 
 class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
   bool _isCameraInitialized = false;
-  int _videoStreamFrameCount = 0;
 
   @override
   void initState() {
     super.initState();
-
     _startVideo();
   }
 
   @override
   void dispose() {
-    _stopVideo();
-
     super.dispose();
   }
 
@@ -51,27 +44,33 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
 
   Widget _videoView() {
     if (_isCameraInitialized == false) {
-      return Container();
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              "카메라 controller 초기화 중...",
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            CircularProgressIndicator(
+              color: Colors.red,
+            ),
+          ],
+        ),
+      );
     }
-
-    final size = MediaQuery.of(context).size;
-    var scale =
-        size.aspectRatio * appCameraController.controller.value.aspectRatio;
-
-    // to prevent scaling down, invert the value
-    if (scale < 1) scale = 1 / scale;
 
     return Container(
       color: Colors.black,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Transform.scale(
-            scale: scale,
-            child: Center(
-              child: CameraPreview(
-                appCameraController.controller,
-              ),
+          Center(
+            child: CameraPreview(
+              appCameraController.controller,
             ),
           ),
           if (widget.customPaint != null) widget.customPaint!,
@@ -80,8 +79,11 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
     );
   }
 
-  void _startVideo() {
-    appCameraController.initializeCamera(
+  Future<void> _startVideo() async {
+    if (_isCameraInitialized ||
+        AppCameraController.status == CameraStatus.initialized) return;
+
+    await appCameraController.initializeCamera(
       (_) async {
         if (mounted) {
           await appCameraController.controller.startImageStream(
@@ -95,22 +97,7 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
     );
   }
 
-  Future<void> _stopVideo() async {
-    await appCameraController.controller.stopImageStream();
-
-    appCameraController.destroyController();
-  }
-
-  void _processVideoImage(CameraImage image) {
-    _videoStreamFrameCount += 1;
-
-    final isSkipCurrentFrame =
-        _videoStreamFrameCount % widget.executionFrameRate != 0;
-    if (isSkipCurrentFrame) {
-      widget.handleVideoImage(null);
-      return;
-    }
-
+  Future<void> _processVideoImage(CameraImage image) async {
     final WriteBuffer allBytes = WriteBuffer();
 
     for (final Plane plane in image.planes) {
@@ -127,7 +114,7 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
       appCameraController.cameras.first.sensorOrientation,
     );
     if (imageRotation == null) {
-      widget.handleVideoImage(null);
+      await widget.handleVideoImage(null);
       return;
     }
 
@@ -145,7 +132,7 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
         .toList();
 
     if (inputImageFormat == null) {
-      widget.handleVideoImage(null);
+      await widget.handleVideoImage(null);
       return;
     }
 
@@ -161,8 +148,6 @@ class _ObjectDetectorCameraState extends State<ObjectDetectorCamera> {
       inputImageData: inputImageData,
     );
 
-    widget.handleVideoImage(inputImage);
-
-    _videoStreamFrameCount = 0;
+    await widget.handleVideoImage(inputImage);
   }
 }

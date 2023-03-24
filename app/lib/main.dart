@@ -13,10 +13,12 @@ Future<void> setupPackages() async {
     resolution: ResolutionPreset.max,
     imageFormatGroup: ImageFormatGroup.yuv420,
   );
+
+  await appCameraController.destroyController();
 }
 
 Future<void> main() async {
-  // await setupPackages();
+  await setupPackages();
 
   runApp(const Blinder());
 }
@@ -31,7 +33,6 @@ class Blinder extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: "Blinder",
         routes: AppRouter.routes,
-        home: AppRouter.initialScreen,
         initialRoute: AppRouter.foodMenuDetectPath,
       ),
     );
