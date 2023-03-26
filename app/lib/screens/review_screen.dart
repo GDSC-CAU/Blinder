@@ -1,7 +1,7 @@
 import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
-import 'package:app/common/widgets/menu_button.dart';
 import 'package:app/common/widgets/screen_title.dart';
+import 'package:app/router/app_router.dart';
 import 'package:app/services/firebase/analyst.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +13,7 @@ class ReviewScreen extends StatefulWidget {
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
-  String reviewValue = 'None';
+  late final String reviewValue;
   List<bool> isSelected = [false, false, false];
   dynamic isValid = 'initialized';
 
@@ -51,6 +51,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ToggleButtons(
+                direction: Axis.vertical,
                 selectedBorderColor: Palette.$brown100,
                 fillColor: Palette.$brown100.withOpacity(0.7),
                 splashColor: Palette.$brown100,
@@ -59,15 +60,19 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 onPressed: (index) {
                   // Respond to button selection
                   setState(() {
-                    isSelected = [false, false, false];
-                    isSelected[index] = !isSelected[index];
                     reviewValue = index == 0
                         ? 'like'
                         : index == 1
                             ? 'neutral'
                             : 'dislike';
-                    print(reviewValue);
-                    validReview();
+                    FirebaseAnalyst.logEvent(
+                      eventName: 'review',
+                      data: {
+                        'value': reviewValue,
+                      },
+                    );
+                    print('Review has been submitted: $reviewValue');
+                    AppRouter.back(context);
                   });
                 },
                 children: const [
@@ -93,45 +98,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
           const SizedBox(
             height: 30,
           ),
-          Padding(
-            padding: const EdgeInsets.all(
-              30.0,
-            ),
-            child: MenuButton(
-                text: '리뷰 등록',
-
-                // Submit review to Firebase to collect only if validated
-                // Client must select any option
-                onPressed: () async {
-                  if (isValid == true) {
-                    setState(() {
-                      isSelected = [false, false, false];
-                    });
-                    validReview();
-                    FirebaseAnalyst.logEvent(
-                      eventName: 'review',
-                      data: {
-                        'value': reviewValue,
-                      },
-                    );
-                    print('Review has been submitted');
-                  } else {
-                    setState(() {
-                      isValid = false;
-                    });
-                  }
-                }),
-          ),
-          if (isValid != false)
-            Container()
-          else
-            const Text(
-              '세 가지 옵션 중 하나를 선택하세요!',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
         ],
       ),
     );
@@ -165,7 +131,7 @@ class _ReviewIconState extends State<ReviewIcon> {
         children: [
           Icon(
             widget.icon,
-            size: 70,
+            size: 120,
             color: widget.color,
           ),
           Padding(
