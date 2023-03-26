@@ -8,6 +8,8 @@ import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../router/app_router.dart';
+
 class FoodMenuBoard extends StatefulWidget {
   const FoodMenuBoard({super.key});
 
@@ -122,6 +124,21 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
     return FutureBuilder(
       future: ttsController.speak(text),
       builder: (context, snapshot) => AppScaffold(
+        actions: <Widget>[
+          IconButton(
+            color: Palette.$brown100,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+            ),
+            icon: const Icon(
+              Icons.reviews,
+            ),
+            onPressed: () => AppRouter.move(
+              context,
+              to: RouterPath.reviewScreen,
+            ),
+          ),
+        ],
         body: Column(
           children: [
             Expanded(
