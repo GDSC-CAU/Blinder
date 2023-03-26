@@ -137,4 +137,5 @@ Future<void> initializeCameraInstance({
     cameraSelectionIndex: cameraSelectionIndex,
     imageFormatGroup: imageFormatGroup,
   );
+  appCameraController.controller.setFlashMode(FlashMode.off);
 }
