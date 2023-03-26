@@ -18,6 +18,7 @@ class AppScaffold extends StatelessWidget {
         centerTitle: true,
         actions: <Widget>[
           IconButton(
+            color: Palette.$brown100,
             padding: const EdgeInsets.symmetric(
               horizontal: 20.0,
             ),
