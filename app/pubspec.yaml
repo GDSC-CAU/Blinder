@@ -31,6 +31,7 @@ dependencies:
   camera: ^0.10.3+2
   cupertino_icons: ^1.0.2
   dio: ^5.0.1
+  firebase_analytics: ^10.1.6
   firebase_core: ^2.8.0
   flutter:
     sdk: flutter
