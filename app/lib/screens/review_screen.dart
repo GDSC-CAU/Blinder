@@ -20,25 +20,7 @@ enum ReviewGrade {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   ReviewGrade? reviewGrade;
-
   List<bool> reviewSelectedState = [false, false, false];
-  bool isValid = false;
-
-  /// Check whether client doesn't select any option and try to submit or not
-  void validateReview() {
-    final isValidReview =
-        reviewSelectedState.where((state) => state).isNotEmpty;
-    setState(() {
-      isValid = isValidReview;
-    });
-
-    if (isValidReview == false) {
-      print('Enable submission: $isValid');
-      for (final e in reviewSelectedState) {
-        print(e);
-      }
-    }
-  }
 
   Future<void> submitReview() async {
     const eventName = "review";
