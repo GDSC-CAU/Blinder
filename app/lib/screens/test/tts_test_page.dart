@@ -15,7 +15,7 @@ class _TtsTestPageState extends State<TtsTestPage> {
   @override
   void initState() {
     super.initState();
-    ttsController.speak('페이지가 열렸습니다.');
+    tts.speak('페이지가 열렸습니다.');
   }
 
   @override

@@ -24,7 +24,7 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
       Duration.zero,
       () {
         final menu = ModalRoute.of(context)!.settings.arguments! as FoodMenu;
-        ttsController.speak('${menu.name}을 선택하셨습니다. 메뉴 개수를 정해주세요.');
+        tts.speak('${menu.name}을 선택하셨습니다. 메뉴 개수를 정해주세요.');
       },
     );
   }
@@ -35,7 +35,7 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
   void increaseFoodCount() => setState(
         () {
           currentCartItemCount++;
-          ttsController.speak('추가하기. 현재 $currentCartItemCount개 선택했습니다.');
+          tts.speak('추가하기. 현재 $currentCartItemCount개 선택했습니다.');
         },
       );
 
@@ -43,9 +43,9 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
         () {
           if (currentCartItemCount > minimumFoodCount) {
             currentCartItemCount--;
-            ttsController.speak('빼기. 현재 $currentCartItemCount개 선택했습니다.');
+            tts.speak('빼기. 현재 $currentCartItemCount개 선택했습니다.');
           } else {
-            ttsController.speak('현재 1개 담겨 있습니다. 최소 1개 이상 주문해주세요.');
+            tts.speak('현재 1개 담겨 있습니다. 최소 1개 이상 주문해주세요.');
           }
         },
       );
@@ -92,7 +92,7 @@ class _FoodCountingScreenState extends State<FoodCountingScreen> {
               onPressed: () {
                 final isOrderInValid = currentCartItemCount == 0;
                 if (isOrderInValid) {
-                  ttsController.speak('메뉴를 1개 이상 선택해주세요.');
+                  tts.speak('메뉴를 1개 이상 선택해주세요.');
                   return;
                 }
 

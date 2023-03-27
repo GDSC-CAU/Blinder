@@ -18,7 +18,7 @@ class FoodMenuScreen extends StatelessWidget {
         .read<FoodMapProvider>()
         .getFoodMenuByCategory(selectedFoodCategory);
 
-    ttsController.speak("$selectedFoodCategory를 선택하셨습니다, 이제 원하는 음식을 선택해주세요");
+    tts.speak("$selectedFoodCategory를 선택하셨습니다, 이제 원하는 음식을 선택해주세요");
 
     return AppScaffold(
       body: Column(

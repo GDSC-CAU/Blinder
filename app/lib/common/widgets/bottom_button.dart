@@ -22,7 +22,7 @@ class BottomButton extends StatelessWidget {
 
     return ElevatedButton(
       onPressed: () {
-        if (ttsText != null) ttsController.speak(ttsText!);
+        if (ttsText != null) tts.speak(ttsText!);
         onPressed();
       },
       style: ElevatedButton.styleFrom(

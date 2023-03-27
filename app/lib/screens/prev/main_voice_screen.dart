@@ -87,7 +87,7 @@ class MainVoiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     testMockupDataSetup(context);
-    ttsController.speak('음식점 이름을 말하거나, 하단의 메뉴판 촬영 버튼을 눌러주세요.');
+    tts.speak('음식점 이름을 말하거나, 하단의 메뉴판 촬영 버튼을 눌러주세요.');
     return ScreenLayout(
       onPressed: () {
         AppRouter.move(
