@@ -11,7 +11,7 @@ class FoodOrderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ttsController.speak('메뉴를 선택하셨습니다. 음식을 추가할 지, 주문을 완료할지 선택하세요.');
+    tts.speak('메뉴를 선택하셨습니다. 음식을 추가할 지, 주문을 완료할지 선택하세요.');
 
     return AppScaffold(
       body: Column(
