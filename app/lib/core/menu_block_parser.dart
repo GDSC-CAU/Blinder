@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:app/core/block/block.dart';
 import 'package:app/core/block/menu_block.dart';
 import 'package:app/core/menu_engine.dart';
+import 'package:app/core/utils/statics.dart';
 import 'package:app/models/ocr_menu_block.dart';
 import 'package:app/services/ocr.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
@@ -132,6 +133,68 @@ class MenuBlockParser {
     );
   }
 
+  /// Case1: `width > height`, valid block
+  ///
+  /// Case2: `width <= height`, invalid block(rotated and flipped `(y,x)` )
+  void _validateMenuBlockCoordinates() {
+    final totalBlockLength = menuBlockList.length;
+    final blockDiff = menuBlockList
+        .map((e) => (e.block.width - e.block.height).abs())
+        .toList();
+    final avgBlockDiff = Statics.avg(blockDiff);
+    final stdBlockDiff = Statics.std(blockDiff);
+
+    final validationCountList = menuBlockList.fold<List<int>>(
+      // [width > height count, same count]
+      [0, 0],
+      (validCount, e) {
+        final isSquareBlock = (e.block.width - e.block.height).abs() <=
+            avgBlockDiff + stdBlockDiff / 2;
+        if (isSquareBlock) {
+          validCount.last++;
+          return validCount;
+        }
+        final isValid = e.block.width > e.block.height;
+        if (isValid) {
+          validCount.first++;
+          return validCount;
+        }
+        return validCount;
+      },
+    );
+    final isValidMenuBlock = validationCountList.first >=
+        totalBlockLength - validationCountList.last;
+
+    print("이미지 회전 안된것?: $isValidMenuBlock");
+    if (isValidMenuBlock) return;
+
+    final validatedMenuBlockList = _getValidMenuBlockList();
+    menuBlockList = validatedMenuBlockList;
+  }
+
+  MenuBlockList _getValidMenuBlockList() {
+    menuBlockList.forEach(print);
+    Coord _getFlippedCoord(Coord target) => Coord(x: target.y, y: target.x);
+
+    final flippedMenuBlockList = menuBlockList
+        .map(
+          (e) => MenuBlock(
+            text: e.text,
+            block: Block(
+              initialPosition: RectPosition(
+                tl: _getFlippedCoord(e.block.tl),
+                tr: _getFlippedCoord(e.block.tr),
+                br: _getFlippedCoord(e.block.br),
+                bl: _getFlippedCoord(e.block.bl),
+              ),
+            ),
+          ),
+        )
+        .toList();
+
+    return flippedMenuBlockList;
+  }
+
   /// parse `MenuBlockList` based on user network status
   ///
   /// - `NetworkStatus.online`: get data from `ocr server`
@@ -143,8 +206,10 @@ class MenuBlockParser {
 
     if (_networkStatus == NetworkStatus.offline) {
       await _parseOffline(imagePath);
-      return;
+    } else {
+      await _parseOnline(imagePath);
     }
-    await _parseOnline(imagePath);
+
+    _validateMenuBlockCoordinates();
   }
 }
