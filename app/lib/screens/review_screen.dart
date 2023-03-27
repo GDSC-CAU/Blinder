@@ -12,27 +12,48 @@ class ReviewScreen extends StatefulWidget {
   State<ReviewScreen> createState() => _ReviewScreenState();
 }
 
-class _ReviewScreenState extends State<ReviewScreen> {
-  late final String reviewValue;
-  List<bool> isSelected = [false, false, false];
-  dynamic isValid = 'initialized';
+enum ReviewGrade {
+  like,
+  neutral,
+  dislike,
+}
 
-  // Validation
-  // check whether client doesn't select any option and try to submit or not
-  void validReview() {
-    if (isSelected.where((state) => state == true).isEmpty) {
-      setState(() {
-        isValid = false;
-      });
-    } else {
-      setState(() {
-        isValid = true;
-      });
+class _ReviewScreenState extends State<ReviewScreen> {
+  ReviewGrade? reviewGrade;
+
+  List<bool> reviewSelectedState = [false, false, false];
+  bool isValid = false;
+
+  /// Check whether client doesn't select any option and try to submit or not
+  void validateReview() {
+    final isValidReview =
+        reviewSelectedState.where((state) => state).isNotEmpty;
+    setState(() {
+      isValid = isValidReview;
+    });
+
+    if (isValidReview == false) {
       print('Enable submission: $isValid');
-      for (final e in isSelected) {
+      for (final e in reviewSelectedState) {
         print(e);
       }
     }
+  }
+
+  Future<void> submitReview() async {
+    const eventName = "review";
+    const eventDataKey = "grade";
+
+    await FirebaseAnalyst.logEvent(
+      eventName: eventName,
+      data: {
+        eventDataKey: reviewGrade.toString(),
+      },
+    );
+
+    print('Review has been submitted: ${reviewGrade.toString()}');
+
+    AppRouter.back(context);
   }
 
   @override
@@ -56,24 +77,25 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 fillColor: Palette.$brown100.withOpacity(0.7),
                 splashColor: Palette.$brown100,
                 borderRadius: BorderRadius.circular(4.0),
-                isSelected: isSelected,
-                onPressed: (index) {
+                isSelected: reviewSelectedState,
+                onPressed: (pressedButtonIndex) async {
                   // Respond to button selection
                   setState(() {
-                    reviewValue = index == 0
-                        ? 'like'
-                        : index == 1
-                            ? 'neutral'
-                            : 'dislike';
-                    FirebaseAnalyst.logEvent(
-                      eventName: 'review',
-                      data: {
-                        'value': reviewValue,
-                      },
-                    );
-                    print('Review has been submitted: $reviewValue');
-                    AppRouter.back(context);
+                    switch (pressedButtonIndex) {
+                      case 0:
+                        reviewGrade = ReviewGrade.like;
+                        return;
+                      case 1:
+                        reviewGrade = ReviewGrade.neutral;
+                        return;
+                      case 2:
+                        reviewGrade = ReviewGrade.dislike;
+                        return;
+                      default:
+                        return;
+                    }
                   });
+                  await submitReview();
                 },
                 children: const [
                   ReviewIcon(
