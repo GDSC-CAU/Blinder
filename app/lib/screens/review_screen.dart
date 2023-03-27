@@ -1,4 +1,3 @@
-import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/screen_title.dart';
 import 'package:app/router/app_router.dart';
@@ -19,88 +18,45 @@ enum ReviewGrade {
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
-  ReviewGrade? reviewGrade;
   List<bool> reviewSelectedState = [false, false, false];
-
-  Future<void> submitReview() async {
-    const eventName = "review";
-    const eventDataKey = "grade";
-
-    await FirebaseAnalyst.logEvent(
-      eventName: eventName,
-      data: {
-        eventDataKey: reviewGrade.toString(),
-      },
-    );
-
-    print('Review has been submitted: ${reviewGrade.toString()}');
-
-    AppRouter.back(context);
-  }
 
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const ScreenTitle(
-            title: '정보가 도움이 됐나요?',
+        children: const [
+          Flexible(
+            child: ScreenTitle(
+              title: '정보가 도움이 됐나요?',
+            ),
           ),
-          const SizedBox(
-            height: 60,
+          Flexible(
+            flex: 2,
+            child: ReviewIconButton(
+              icon: Icons.thumb_up,
+              color: Colors.redAccent,
+              text: '좋아요',
+              grade: ReviewGrade.like,
+            ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ToggleButtons(
-                direction: Axis.vertical,
-                selectedBorderColor: Palette.$brown100,
-                fillColor: Palette.$brown100.withOpacity(0.7),
-                splashColor: Palette.$brown100,
-                borderRadius: BorderRadius.circular(4.0),
-                isSelected: reviewSelectedState,
-                onPressed: (pressedButtonIndex) async {
-                  // Respond to button selection
-                  setState(() {
-                    switch (pressedButtonIndex) {
-                      case 0:
-                        reviewGrade = ReviewGrade.like;
-                        return;
-                      case 1:
-                        reviewGrade = ReviewGrade.neutral;
-                        return;
-                      case 2:
-                        reviewGrade = ReviewGrade.dislike;
-                        return;
-                      default:
-                        return;
-                    }
-                  });
-                  await submitReview();
-                },
-                children: const [
-                  ReviewIcon(
-                    icon: Icons.thumb_up,
-                    text: '좋아요',
-                    color: Colors.redAccent,
-                  ),
-                  ReviewIcon(
-                    icon: Icons.chat_bubble,
-                    text: '보통',
-                    color: Colors.orange,
-                  ),
-                  ReviewIcon(
-                    icon: Icons.thumb_down,
-                    text: '싫어요',
-                    color: Colors.blueGrey,
-                  ),
-                ],
-              ),
-            ],
+          Flexible(
+            flex: 2,
+            child: ReviewIconButton(
+              icon: Icons.thumb_down,
+              color: Colors.orange,
+              text: '보통이에요',
+              grade: ReviewGrade.neutral,
+            ),
           ),
-          const SizedBox(
-            height: 30,
+          Flexible(
+            flex: 2,
+            child: ReviewIconButton(
+              icon: Icons.thumb_down,
+              color: Colors.blueGrey,
+              text: '별로에요',
+              grade: ReviewGrade.dislike,
+            ),
           ),
         ],
       ),
@@ -108,43 +64,64 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 }
 
-class ReviewIcon extends StatefulWidget {
+class ReviewIconButton extends StatefulWidget {
   final IconData icon;
   final Color color;
   final String? text;
-  const ReviewIcon({
+  final ReviewGrade grade;
+  const ReviewIconButton({
     super.key,
     required this.icon,
     required this.color,
     this.text,
+    required this.grade,
   });
 
   @override
-  State<ReviewIcon> createState() => _ReviewIconState();
+  State<ReviewIconButton> createState() => _ReviewIconButtonState();
 }
 
-class _ReviewIconState extends State<ReviewIcon> {
+class _ReviewIconButtonState extends State<ReviewIconButton> {
+  Future<void> submitReview(ReviewGrade grade) async {
+    const eventName = "review";
+    const eventDataKey = "grade";
+
+    await FirebaseAnalyst.logEvent(
+      eventName: eventName,
+      data: {
+        eventDataKey: grade.toString(),
+      },
+    );
+
+    print('Review has been submitted: ${grade.toString()}');
+
+    AppRouter.back(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
+      padding: const EdgeInsets.all(
+        16.0,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            widget.icon,
-            size: 120,
-            color: widget.color,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ScreenTitle(
+      child: IconButton(
+        iconSize: 200,
+        onPressed: () async {
+          await submitReview(widget.grade);
+        },
+        icon: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              widget.icon,
+              size: 100,
+              color: widget.color,
+            ),
+            ScreenTitle(
               title: widget.text ?? 'None',
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
