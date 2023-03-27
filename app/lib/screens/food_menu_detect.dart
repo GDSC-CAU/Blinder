@@ -11,11 +11,8 @@ import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 import 'package:image/image.dart' as image;
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -180,34 +177,8 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
     }
   }
 
-  Future<String> _getModelPath(String assetPath) async {
-    if (io.Platform.isAndroid) {
-      return 'flutter_assets/$assetPath';
-    }
-
-    final path = '${(await getApplicationSupportDirectory()).path}/$assetPath';
-    await io.Directory(dirname(path)).create(
-      recursive: true,
-    );
-
-    final file = io.File(path);
-
-    if (!await file.exists()) {
-      final byteData = await rootBundle.load(assetPath);
-      await file.writeAsBytes(
-        byteData.buffer.asUint8List(
-          byteData.offsetInBytes,
-          byteData.lengthInBytes,
-        ),
-      );
-    }
-
-    return file.path;
-  }
-
   Future<void> _initializeMenuBoardDetector() async {
     const modelName = 'menu-detector';
-    // final modelPath = await _getModelPath(modelSourcePath);
 
     final response =
         await FirebaseObjectDetectorModelManager().downloadModel(modelName);
@@ -255,6 +226,7 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
 
       final XFile capturedImageFile =
           await appCameraController.controller.takePicture();
+
       if (_deviceOrientation == DeviceOrientation.middle0Deg) {
         return capturedImageFile.path;
       }
