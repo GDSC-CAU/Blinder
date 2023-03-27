@@ -1,7 +1,9 @@
+import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/screen_title.dart';
 import 'package:app/router/app_router.dart';
 import 'package:app/services/firebase/analyst.dart';
+import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 
 class ReviewScreen extends StatefulWidget {
@@ -18,7 +20,11 @@ enum ReviewGrade {
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
-  List<bool> reviewSelectedState = [false, false, false];
+  @override
+  void initState() {
+    super.initState();
+    ttsController.speak('어플에 얼마나 만족했는지 평가 부탁드립니다.');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +49,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
           Flexible(
             flex: 2,
             child: ReviewIconButton(
-              icon: Icons.thumb_down,
+              icon: Icons.chat_bubble,
               color: Colors.orange,
               text: '보통이에요',
               grade: ReviewGrade.neutral,
@@ -101,26 +107,28 @@ class _ReviewIconButtonState extends State<ReviewIconButton> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(
-        16.0,
-      ),
-      child: IconButton(
-        iconSize: 200,
-        onPressed: () async {
-          await submitReview(widget.grade);
-        },
-        icon: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              widget.icon,
-              size: 100,
-              color: widget.color,
-            ),
-            ScreenTitle(
-              title: widget.text ?? 'None',
-            ),
-          ],
+      padding: const EdgeInsets.all(8.0),
+      child: CircleAvatar(
+        radius: 100,
+        backgroundColor: Palette.$brown100,
+        child: IconButton(
+          iconSize: 200,
+          onPressed: () async {
+            await submitReview(widget.grade);
+          },
+          icon: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                size: 100,
+                color: widget.color,
+              ),
+              ScreenTitle(
+                title: widget.text ?? 'None',
+              ),
+            ],
+          ),
         ),
       ),
     );
