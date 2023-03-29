@@ -13,5 +13,12 @@ class FirebaseAnalyst {
     );
   }
 
+  static Future<void> setUserProperty({
+    required String propertyName,
+    required String? value,
+  }) async {
+    await analytics.setUserProperty(name: propertyName, value: value);
+  }
+
   FirebaseAnalyst();
 }
