@@ -2,13 +2,12 @@ import 'dart:io';
 
 import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
+import 'package:app/common/widgets/tts_option_gesture_handler.dart';
 import 'package:app/providers/food_menu_provider.dart';
 import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../router/app_router.dart';
 
 class FoodMenuBoard extends StatefulWidget {
   const FoodMenuBoard({super.key});
@@ -121,101 +120,88 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
     final String text =
         _isFirstAccess ? "$_initialParse, $menuOverallText" : menuOverallText;
 
-    return FutureBuilder(
-      future: tts.speak(text),
-      builder: (context, snapshot) => AppScaffold(
-        actions: <Widget>[
-          IconButton(
-            color: Palette.$brown100,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-            ),
-            icon: const Icon(
-              Icons.reviews,
-            ),
-            onPressed: () => AppRouter.move(
-              context,
-              to: RouterPath.reviewScreen,
-            ),
-          ),
-        ],
-        body: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: GridView.count(
-                  mainAxisSpacing: 5,
-                  crossAxisSpacing: 5,
-                  crossAxisCount: 2,
-                  clipBehavior: Clip.antiAlias,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    for (final foodMenu in currentPageFoodMenuList)
-                      InfoContainer(
-                        backgroundColor: Palette.$brown100,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              foodMenu.name,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
+    return TtsOptionGestureHandler(
+      child: FutureBuilder(
+        future: tts.speak(text),
+        builder: (context, snapshot) => AppScaffold(
+          body: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: GridView.count(
+                    mainAxisSpacing: 5,
+                    crossAxisSpacing: 5,
+                    crossAxisCount: 2,
+                    clipBehavior: Clip.antiAlias,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      for (final foodMenu in currentPageFoodMenuList)
+                        InfoContainer(
+                          backgroundColor: Palette.$brown100,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                foodMenu.name,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                            const SizedBox(
-                              height: 5,
-                            ),
-                            Text(
-                              foodMenu.price,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
+                              const SizedBox(
+                                height: 5,
                               ),
-                            ),
-                          ],
+                              Text(
+                                foodMenu.price,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: bottomButtonHeight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Button(
-                    text: isFirst ? "첫번째 메뉴페이지" : "이전",
-                    onPressed: () async {
-                      setState(() {
-                        if (isFirst) {
-                          _isFirstAccess = false;
-                        }
-                        _decreasePageCount();
-                      });
-                    },
-                    backgroundColor: Colors.red.shade500,
-                    foregroundColor: Palette.$white,
-                  ),
-                  Button(
-                    text: isLast ? "마지막 메뉴페이지" : "다음",
-                    onPressed: () async {
-                      setState(() {
-                        if (isFirst) {
-                          _isFirstAccess = false;
-                        }
-                        _increasePageCount();
-                      });
-                    },
-                    backgroundColor: Colors.green.shade500,
-                    foregroundColor: Palette.$white,
-                  ),
-                ],
-              ),
-            )
-          ],
+              SizedBox(
+                height: bottomButtonHeight,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Button(
+                      text: isFirst ? "첫번째 메뉴페이지" : "이전",
+                      onPressed: () async {
+                        setState(() {
+                          if (isFirst) {
+                            _isFirstAccess = false;
+                          }
+                          _decreasePageCount();
+                        });
+                      },
+                      backgroundColor: Colors.red.shade500,
+                      foregroundColor: Palette.$white,
+                    ),
+                    Button(
+                      text: isLast ? "마지막 메뉴페이지" : "다음",
+                      onPressed: () async {
+                        setState(() {
+                          if (isFirst) {
+                            _isFirstAccess = false;
+                          }
+                          _increasePageCount();
+                        });
+                      },
+                      backgroundColor: Colors.green.shade500,
+                      foregroundColor: Palette.$white,
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

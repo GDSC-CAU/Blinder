@@ -304,7 +304,7 @@ class ClusteringEngine {
     menuClusters.clear();
 
     _$dbscan.updateClusterTarget([]);
-    _$dbscan.updateClusterTarget([]);
+    _$lineAlign.updateClusterTarget([]);
   }
 
   void updateMenuBlockList(MenuBlockList newMenuBlockList) {

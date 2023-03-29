@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/providers/providers.dart';
 import 'package:app/router/app_router.dart';
 import 'package:app/services/firebase/analyst.dart';
@@ -16,7 +18,13 @@ Future<void> setupPackages() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await initTts();
+
+  await initializeTtsInstance(
+    language: "ko-KR",
+    waitForSpeakingCompletion: true,
+    useDefaultEngine: false,
+  );
+
   await initializeCameraInstance(
     resolution: ResolutionPreset.max,
     imageFormatGroup: ImageFormatGroup.yuv420,
