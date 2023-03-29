@@ -88,15 +88,18 @@ class ReviewIconButton extends StatefulWidget {
 }
 
 class _ReviewIconButtonState extends State<ReviewIconButton> {
-  Future<void> submitReview(ReviewGrade grade) async {
-    const eventName = "review";
-    const eventDataKey = "grade";
+  final Map<ReviewGrade, String> reviewProperties = {
+    ReviewGrade.like: 'like',
+    ReviewGrade.neutral: 'neutral',
+    ReviewGrade.dislike: 'dislike'
+  };
 
-    await FirebaseAnalyst.logEvent(
-      eventName: eventName,
-      data: {
-        eventDataKey: grade.toString(),
-      },
+  Future<void> submitReview(ReviewGrade grade) async {
+    const propertyName = "review";
+
+    await FirebaseAnalyst.setUserProperty(
+      propertyName: propertyName,
+      value: reviewProperties[grade],
     );
 
     print('Review has been submitted: ${grade.toString()}');
