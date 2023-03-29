@@ -261,7 +261,7 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
 
       final fixedRotationImageFile = await getRotatedImageFile(
         imagePath: capturedImageFile.path,
-        angle: _deviceOrientation == DeviceOrientation.cw90Deg ? -180 : 0,
+        angle: _deviceOrientation == DeviceOrientation.cw90Deg ? 90 : -90,
       );
 
       return fixedRotationImageFile?.path;
