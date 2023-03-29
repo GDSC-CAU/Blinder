@@ -4,6 +4,7 @@ import 'package:app/common/styles/colors.dart';
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/common/widgets/tts_option_gesture_handler.dart';
 import 'package:app/providers/food_menu_provider.dart';
+import 'package:app/router/app_router.dart';
 import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:flutter/material.dart';
@@ -124,6 +125,21 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
       child: FutureBuilder(
         future: tts.speak(text),
         builder: (context, snapshot) => AppScaffold(
+          actions: <Widget>[
+            IconButton(
+              color: Palette.$brown100,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+              ),
+              icon: const Icon(
+                Icons.reviews,
+              ),
+              onPressed: () => AppRouter.move(
+                context,
+                to: RouterPath.reviewScreen,
+              ),
+            ),
+          ],
           body: Column(
             children: [
               Expanded(
