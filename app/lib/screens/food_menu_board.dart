@@ -122,7 +122,7 @@ class _FoodMenuBoardState extends State<FoodMenuBoard> {
         _isFirstAccess ? "$_initialParse, $menuOverallText" : menuOverallText;
 
     return FutureBuilder(
-      future: ttsController.speak(text),
+      future: tts.speak(text),
       builder: (context, snapshot) => AppScaffold(
         actions: <Widget>[
           IconButton(

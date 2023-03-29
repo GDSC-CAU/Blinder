@@ -23,7 +23,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   void initState() {
     super.initState();
-    ttsController.speak('어플에 얼마나 만족했는지 평가 부탁드립니다.');
+    tts.speak('어플에 얼마나 만족했는지 평가 부탁드립니다.');
   }
 
   @override

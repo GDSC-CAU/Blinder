@@ -1,13 +1,13 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
-final FlutterTts ttsController = FlutterTts();
+final FlutterTts tts = FlutterTts();
 
 Future<void> initTts() async {
-  await ttsController.awaitSpeakCompletion(true);
-  await ttsController.setSpeechRate(0.8);
-  await ttsController.setLanguage('ko');
+  await tts.awaitSpeakCompletion(true);
+  await tts.setSpeechRate(0.8);
+  await tts.setLanguage('ko');
 }
 
 Future<void> speak(String word) async {
-  await ttsController.speak(word);
+  await tts.speak(word);
 }

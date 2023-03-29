@@ -13,8 +13,7 @@ class FoodReceiptScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final totalPrice = context.read<FoodCartProvider>().getTotalPrice();
-    ttsController
-        .speak('주문서가 완성됐습니다. 종업원에게 주문서를 보여주세요. 총 가격은 $totalPrice 원 입니다.');
+    tts.speak('주문서가 완성됐습니다. 종업원에게 주문서를 보여주세요. 총 가격은 $totalPrice 원 입니다.');
 
     return AppScaffold(
       body: Column(

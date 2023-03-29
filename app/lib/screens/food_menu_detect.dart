@@ -284,14 +284,14 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
 
     const detectedMessageCondition = 15;
     if (_detectionStream.length == detectedMessageCondition) {
-      await ttsController.speak("메뉴판으로 추정되는 물체를 발견했습니다!");
+      await tts.speak("메뉴판으로 추정되는 물체를 발견했습니다!");
     }
 
     if (_isFullyCaptured) {
       _executionCount++;
       if (_executionCount != 1) return;
 
-      await ttsController.speak("메뉴판을 발견했습니다! 잠시 고정해주세요.");
+      await tts.speak("메뉴판을 발견했습니다! 잠시 고정해주세요.");
 
       setState(() {
         _menuBoardDetectProcessState = MenuBoardDetectProcessState.capturing;
@@ -312,7 +312,7 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       // cancel sensor subscription
       await _accelerometerStreamSubscription.cancel();
 
-      await ttsController.speak("메뉴를 만들고 있습니다! 잠시만 기다려주세요");
+      await tts.speak("메뉴를 만들고 있습니다! 잠시만 기다려주세요");
       await menuEngine.parse(capturedImagePath);
 
       await Future.delayed(const Duration(seconds: 1));
@@ -419,7 +419,7 @@ class CapturingProcess extends StatelessWidget {
   });
 
   Future<void> _capturingGuide() async {
-    await ttsController.speak("사진을 촬영 중입니다, 핸드폰을 움직이 말아주세요!");
+    await tts.speak("사진을 촬영 중입니다, 핸드폰을 움직이 말아주세요!");
   }
 
   @override
