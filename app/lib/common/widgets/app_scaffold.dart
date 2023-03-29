@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget body;
+  final List<Widget>? actions;
 
   const AppScaffold({
     super.key,
     required this.body,
+    this.actions,
   });
 
   @override
@@ -15,6 +17,7 @@ class AppScaffold extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Palette.$brown900,
         centerTitle: true,
+        actions: actions,
       ),
       body: Center(child: body),
     );
