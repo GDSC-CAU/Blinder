@@ -59,10 +59,6 @@ class _TtsOptionGestureHandlerState extends State<TtsOptionGestureHandler> {
     final isUpward = upwardCoordCount > downwardCoordCount;
     final gestureCount = isUpward ? upwardCoordCount : downwardCoordCount;
 
-    print(
-      "upward?: $upwardCoordCount, down: $downwardCoordCount, gestureCount: $gestureCount",
-    );
-
     if (gestureCount < TtsOptionGestureHandler.gestureDetectedCriticalCount) {
       return;
     }

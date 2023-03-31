@@ -129,7 +129,6 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
               xAcc: event.x,
               yAcc: event.y,
             );
-            print(_deviceOrientation);
           });
         },
       );
