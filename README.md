@@ -1,6 +1,8 @@
-### **시각장애인이 타인의 손길 없이 원하는 음식을 주문할 수 있게 돕는 앱**
+# Blinder
 
-### Blinder(`Bl`ind + `in`dependent + or`der`)를 소개합니다!
+> `Bl`ind + `in`dependent + or`der`
+
+<br />
 
 # The Problem We Faced 🤔
 
@@ -17,24 +19,28 @@ Our goal is to help blind people recognize menus and order without assistance. T
 This is accomplished by the following process
 
 1. Detect the menu in real-time on the camera screen using a `TFLite` model trained with menu images.
-2. Use the `Flutter` TTS package  to determine if the menu board is visible on the user's camera.
+2. Use the `Flutter` TTS package to determine if the menu board is visible on the user's camera.
 3. If a **menu board** is **detected**, app will **automatically take a photo.**
 4. Crop the captured image to extract the target menu board and get the OCR data of the menu board through the `Google Vision API`.
 5. Process the OCR data into menus and prices using algorithms.
-    
+
     ![menu_extraction_algorithm](./assets/menu_algorithm.webp)
-    
-6. Provide intuitive menu to price information based on blind people’s real feedback. 
+
+6. Provide intuitive menu to price information based on blind people’s real feedback.
+
+<br />
 
 # Technology ⚙️
 
 ## Used Technology
 
-- `Flutter`
-- `TensorFlow Lite`
-- `OpenCV`
-- `FastAPI`
-- `Google Vision API`
+-   `Flutter`
+-   `Firebase`
+-   `TensorFlow Lite`
+-   `Google Vision API`
+-   `Google Cloud Platform`
+-   `OpenCV`
+-   `FastAPI`
 
 ## Higher Order Component Architecture
 
@@ -44,6 +50,8 @@ This is accomplished by the following process
 
 ![live_demo](./assets/blinder_demo.gif)
 
+<br />
+
 # UN-SDGs: **Reduced Inequalities**
 
 We select **10. Reduced Inequalities** from the United Nations' Sustainable Development goal(s).
@@ -52,9 +60,13 @@ We wanted to address the discomfort of people with disabilities by focusing on t
 
 We want to address the discomfort of people with disabilities, especially blind people, and furthermore, we want to eliminate discriminatory practices against blind people and improve policies and awareness of them.
 
+<br />
+
 # Demo Video Link 🔗
 
 [![youtube_demo](./assets/youtube_link.png)](https://www.youtube.com/watch?v=OPDtJE0w32Y)
+
+<br />
 
 # Getting Started 📲
 
@@ -62,9 +74,11 @@ We want to address the discomfort of people with disabilities, especially blind 
 
 # Contributors 👨🏻‍💻
 
-| Name | Jang Junesung | Han Shin | Lee HyunSub | Park Ilsang |
-| --- | --- | --- | --- | --- |
-| Github | https://github.com/danpacho | https://github.com/Urchinode | Lee HyunSub | https://github.com/1lsang |
-| Email | danpa725@cau.ac.kr | vrdhan212@gmail.com | hyonklee@gmail.com | ilsangpark.98@gmail.com |
+| Name   | Jang Junesung               | Han Shin                     | Lee HyunSub        | Park Ilsang               |
+| ------ | --------------------------- | ---------------------------- | ------------------ | ------------------------- |
+| Github | https://github.com/danpacho | https://github.com/Urchinode | Lee HyunSub        | https://github.com/1lsang |
+| Email  | danpa725@cau.ac.kr          | vrdhan212@gmail.com          | hyonklee@gmail.com | ilsangpark.98@gmail.com   |
 
 # Conventions 🛠️
+
+Check out our **[convention rules](./conventions.md)**!
