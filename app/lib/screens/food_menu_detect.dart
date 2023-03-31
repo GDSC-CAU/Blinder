@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' as io;
 
 import 'package:app/common/widgets/app_scaffold.dart';
 import 'package:app/core/menu_engine.dart';
@@ -11,11 +10,7 @@ import 'package:app/utils/camera.dart';
 import 'package:app/utils/tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
-import 'package:image/image.dart' as image;
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -70,9 +65,10 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
   MenuBoardDetectProcessState _menuBoardDetectProcessState =
       MenuBoardDetectProcessState.process;
 
-  int _executionCount = 0;
-
+  bool? _isOrientationCorrect;
+  bool _isCapturingProcess = false;
   bool _isDetectProcessing = false;
+  bool _isSimilarObjectCaptured = false;
 
   List<bool> _detectionStream = [];
 
@@ -180,34 +176,8 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
     }
   }
 
-  Future<String> _getModelPath(String assetPath) async {
-    if (io.Platform.isAndroid) {
-      return 'flutter_assets/$assetPath';
-    }
-
-    final path = '${(await getApplicationSupportDirectory()).path}/$assetPath';
-    await io.Directory(dirname(path)).create(
-      recursive: true,
-    );
-
-    final file = io.File(path);
-
-    if (!await file.exists()) {
-      final byteData = await rootBundle.load(assetPath);
-      await file.writeAsBytes(
-        byteData.buffer.asUint8List(
-          byteData.offsetInBytes,
-          byteData.lengthInBytes,
-        ),
-      );
-    }
-
-    return file.path;
-  }
-
   Future<void> _initializeMenuBoardDetector() async {
     const modelName = 'menu-detector';
-    // final modelPath = await _getModelPath(modelSourcePath);
 
     final response =
         await FirebaseObjectDetectorModelManager().downloadModel(modelName);
@@ -219,63 +189,54 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       multipleObjects: true,
     );
 
-    _objectDetector = ObjectDetector(
-      options: options,
-    );
+    _objectDetector = ObjectDetector(options: options);
     _objectDetectorState = ObjectDetectorState.initialized;
-  }
-
-  Future<io.File?> getRotatedImageFile({
-    required String imagePath,
-    required int angle,
-  }) async {
-    final originalImageFile = io.File(imagePath);
-    final List<int> originalImageBytes = await originalImageFile.readAsBytes();
-    final image.Image? originalImage = image.decodeImage(originalImageBytes);
-
-    if (originalImage == null) return null;
-
-    final rotatedImage = image.copyRotate(
-      originalImage,
-      angle,
-    );
-
-    final rotatedImageFile = await originalImageFile.writeAsBytes(
-      image.encodeJpg(rotatedImage),
-    );
-
-    return rotatedImageFile;
   }
 
   Future<String?> _getCapturedImagePath() async {
     if (AppCameraController.status != CameraStatus.destroyed &&
         AppCameraController.status != CameraStatus.waitForInitialization) {
-      // await appCameraController.controller.lockCaptureOrientation();
       await appCameraController.controller.stopImageStream();
 
       final XFile capturedImageFile =
           await appCameraController.controller.takePicture();
-      if (_deviceOrientation == DeviceOrientation.middle0Deg) {
-        return capturedImageFile.path;
-      }
-
-      final fixedRotationImageFile = await getRotatedImageFile(
-        imagePath: capturedImageFile.path,
-        angle: _deviceOrientation == DeviceOrientation.cw90Deg ? -180 : 0,
-      );
-
-      return fixedRotationImageFile?.path;
+      return capturedImageFile.path;
     }
     return null;
+  }
+
+  Future<void> _checkIsOrientationCorrected() async {
+    await Future.delayed(const Duration(seconds: 2), () async {
+      if (_deviceOrientation == DeviceOrientation.middle0Deg) {
+        _isOrientationCorrect = true;
+        return;
+      }
+
+      await tts.speak("핸드폰을 세워주세요!");
+      _isOrientationCorrect = false;
+      await _checkIsOrientationCorrected();
+    });
+  }
+
+  void _resetVideoProcess() {
+    setState(() {
+      _menuBoardDetectProcessState = MenuBoardDetectProcessState.process;
+      _isCapturingProcess = false;
+      _isSimilarObjectCaptured = false;
+    });
   }
 
   Future<void> _handleDetection({
     required BuildContext context,
     required InputImage? videoImage,
   }) async {
-    if (videoImage == null) {
-      return;
-    }
+    if (videoImage == null) return;
+
+    if (_isCapturingProcess ||
+        _isSimilarObjectCaptured ||
+        _isOrientationCorrect == false) return;
+
+    await _checkIsOrientationCorrected();
 
     if (_menuBoardDetectProcessState == MenuBoardDetectProcessState.capturing ||
         _menuBoardDetectProcessState == MenuBoardDetectProcessState.success) {
@@ -284,12 +245,14 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
 
     const detectedMessageCondition = 15;
     if (_detectionStream.length == detectedMessageCondition) {
+      _isSimilarObjectCaptured = true;
       await tts.speak("메뉴판으로 추정되는 물체를 발견했습니다!");
+    } else {
+      _isSimilarObjectCaptured = false;
     }
 
     if (_isFullyCaptured) {
-      _executionCount++;
-      if (_executionCount != 1) return;
+      _isCapturingProcess = true;
 
       await tts.speak("메뉴판을 발견했습니다! 잠시 고정해주세요.");
 
@@ -300,10 +263,7 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       final capturedImagePath = await _getCapturedImagePath();
 
       if (capturedImagePath == null) {
-        _executionCount = 0;
-        setState(() {
-          _menuBoardDetectProcessState = MenuBoardDetectProcessState.process;
-        });
+        _resetVideoProcess();
         return;
       }
 
@@ -315,7 +275,6 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       await tts.speak("메뉴를 만들고 있습니다! 잠시만 기다려주세요");
       await menuEngine.parse(capturedImagePath);
 
-      await Future.delayed(const Duration(seconds: 1));
       Provider.of<FoodMenuProvider>(
         context,
         listen: false,
@@ -334,9 +293,7 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       });
     } else {
       await detectMenuBoard(videoImage);
-      setState(() {
-        _menuBoardDetectProcessState = MenuBoardDetectProcessState.process;
-      });
+      _resetVideoProcess();
     }
   }
 
