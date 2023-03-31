@@ -1,6 +1,8 @@
+<br />
+
 # Blinder
 
-> `Bl`ind + `in`dependent + or`der`
+> 🌱 **`Bl`ind + `in`dependent + or`der`**
 
 <br />
 
@@ -70,7 +72,15 @@ We want to address the discomfort of people with disabilities, especially blind 
 
 # Getting Started 📲
 
-### **[Download APK File](notion://www.notion.so/gdsc-cau/README-d6f54b89a1794d22b5840a141397549a)**
+```bash
+git clone https://github.com/GDSC-CAU/Blinder.git
+
+cd Blinder/app
+
+flutter pub get
+
+flutter run
+```
 
 # Contributors 👨🏻‍💻
 
