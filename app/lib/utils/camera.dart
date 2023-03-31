@@ -103,16 +103,14 @@ class AppCameraController {
       if (error is CameraException) {
         switch (error.code) {
           case 'CameraAccessDenied':
-            print("CAMERA: CameraAccessDenied, ${error.code}");
-            break;
+            throw Exception("CAMERA: CameraAccessDenied, ${error.code}");
           // ios
           case "CameraAccessDeniedWithoutPrompt":
-            print("CAMERA: CameraAccessDeniedWithoutPrompt, ${error.code}");
-            break;
+            throw Exception(
+                "CAMERA: CameraAccessDeniedWithoutPrompt, ${error.code}");
           // ios
           case "CameraAccessRestricted":
-            print("CAMERA: CameraAccessRestricted");
-            break;
+            throw Exception("CAMERA: CameraAccessRestricted");
           // another error
           default:
             throw Exception("Unknown error: ${error.code}");
