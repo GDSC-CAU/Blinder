@@ -54,7 +54,7 @@ We want to address the discomfort of people with disabilities, especially blind 
 
 # Demo Video Link 🔗
 
-[https://www.youtube.com/watch?v=OPDtJE0w32Y](https://www.youtube.com/watch?v=OPDtJE0w32Y)
+[![youtube_demo](./assets/youtube_link.png)](https://www.youtube.com/watch?v=OPDtJE0w32Y)
 
 # Getting Started 📲
 
