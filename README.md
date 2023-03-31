@@ -1,7 +1,7 @@
 <br />
 
 # Blinder
-
+![Blinder](./assets/blinder.jpeg)
 > 🌱 **`Bl`ind + `in`dependent + or`der`**
 
 <br />
