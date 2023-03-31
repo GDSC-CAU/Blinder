@@ -65,10 +65,11 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
   MenuBoardDetectProcessState _menuBoardDetectProcessState =
       MenuBoardDetectProcessState.process;
 
-  bool? _isOrientationCorrect;
-  bool _isCapturingProcess = false;
   bool _isDetectProcessing = false;
-  bool _isSimilarObjectCaptured = false;
+  bool _isOrientationCorrect = false;
+  bool _isMenuBoardCapturingProcessing = false;
+  bool _isOrientationCheckingProcessing = false;
+  bool _isSimilarObjectCapturingProcessing = false;
 
   List<bool> _detectionStream = [];
 
@@ -205,24 +206,31 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
     return null;
   }
 
-  Future<void> _checkIsOrientationCorrected() async {
-    await Future.delayed(const Duration(seconds: 2), () async {
-      if (_deviceOrientation == DeviceOrientation.middle0Deg) {
-        _isOrientationCorrect = true;
-        return;
-      }
+  Future<void> _checkIsOrientationCorrect() async {
+    _isOrientationCheckingProcessing = true;
 
-      await tts.speak("핸드폰을 세워주세요!");
-      _isOrientationCorrect = false;
-      await _checkIsOrientationCorrected();
-    });
+    if (_deviceOrientation == DeviceOrientation.middle0Deg) {
+      _isOrientationCorrect = true;
+      _isOrientationCheckingProcessing = false;
+      return;
+    }
+
+    await Future.delayed(const Duration(seconds: 2));
+    await tts.speak("핸드폰을 세워주세요!");
+
+    _isOrientationCorrect = false;
+    _isOrientationCheckingProcessing = false;
   }
 
   void _resetVideoProcess() {
     setState(() {
       _menuBoardDetectProcessState = MenuBoardDetectProcessState.process;
-      _isCapturingProcess = false;
-      _isSimilarObjectCaptured = false;
+
+      _isDetectProcessing = false;
+      _isOrientationCorrect = false;
+      _isMenuBoardCapturingProcessing = false;
+      _isOrientationCheckingProcessing = false;
+      _isSimilarObjectCapturingProcessing = false;
     });
   }
 
@@ -232,27 +240,35 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
   }) async {
     if (videoImage == null) return;
 
-    if (_isCapturingProcess ||
-        _isSimilarObjectCaptured ||
-        _isOrientationCorrect == false) return;
-
-    await _checkIsOrientationCorrected();
+    if (_isMenuBoardCapturingProcessing) return;
 
     if (_menuBoardDetectProcessState == MenuBoardDetectProcessState.capturing ||
         _menuBoardDetectProcessState == MenuBoardDetectProcessState.success) {
       return;
     }
 
+    if (_isOrientationCheckingProcessing == false) {
+      await _checkIsOrientationCorrect();
+    }
+
+    if (_isOrientationCorrect == false) return;
+
+    if (_isSimilarObjectCapturingProcessing) {
+      await detectMenuBoard(videoImage);
+      return;
+    }
+
     const detectedMessageCondition = 15;
     if (_detectionStream.length == detectedMessageCondition) {
-      _isSimilarObjectCaptured = true;
+      _isSimilarObjectCapturingProcessing = true;
       await tts.speak("메뉴판으로 추정되는 물체를 발견했습니다!");
+      _isSimilarObjectCapturingProcessing = false;
     } else {
-      _isSimilarObjectCaptured = false;
+      _isSimilarObjectCapturingProcessing = false;
     }
 
     if (_isFullyCaptured) {
-      _isCapturingProcess = true;
+      _isMenuBoardCapturingProcessing = true;
 
       await tts.speak("메뉴판을 발견했습니다! 잠시 고정해주세요.");
 
@@ -290,10 +306,10 @@ class _ObjectDetectorView extends State<FoodMenuDetect> {
       setState(() {
         _menuBoardDetectProcessState = MenuBoardDetectProcessState.success;
         _detectionStream = [];
+        _resetVideoProcess();
       });
     } else {
       await detectMenuBoard(videoImage);
-      _resetVideoProcess();
     }
   }
 
