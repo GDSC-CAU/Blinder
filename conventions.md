@@ -43,9 +43,9 @@ git checkout -b {branch-type}/{main-category}/{sub-category}
 
     1. change your branch to `main`
 
-        ```bash
-        git checkout main
-        ```
+    ```bash
+    git checkout main
+    ```
 
     2. **pull merged code** into `main`
 
